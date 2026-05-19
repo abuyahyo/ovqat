@@ -81,11 +81,12 @@ export default {
 
         lastError = { status: upstream.status, body: text, model };
 
-        // Квота / мавжуд эмас → навбатдаги модель
+        // Квота / мавжуд эмас / Gemini сервер юкламаси (5xx) → навбатдаги модель
         if (
           upstream.status === 429 ||
           upstream.status === 404 ||
-          /quota|limit:\s*0|not\s*found/i.test(text)
+          upstream.status >= 500 ||
+          /quota|limit:\s*0|not\s*found|unavailable|overloaded|high\s*demand/i.test(text)
         ) {
           continue;
         }
