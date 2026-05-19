@@ -761,91 +761,26 @@
     font-size: 0.95rem;
   }
 
-  .api-key-block {
-    margin-bottom: 24px;
-    padding: 16px 20px;
-    background: var(--cream);
-    border-radius: 12px;
-    border: 1px dashed rgba(184, 137, 61, 0.35);
-  }
-
-  .api-key-block summary {
-    cursor: pointer;
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--gold-deep);
-    letter-spacing: 0.04em;
-    user-select: none;
-  }
-
-  .api-key-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-
-  .api-key-row input {
-    flex: 1;
-    min-width: 200px;
-    padding: 12px 16px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.9rem;
-    color: var(--ink);
-    background: var(--paper);
-    border: 1.5px solid rgba(184, 137, 61, 0.25);
-    border-radius: 10px;
-    outline: none;
-  }
-
-  .api-key-row input:focus {
-    border-color: var(--gold);
-  }
-
-  .api-key-row button {
-    padding: 12px 22px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--cream);
-    background: var(--ink);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  .api-key-row button:hover { background: var(--gold-deep); }
-  .api-key-row button.saved { background: var(--sage); }
-
-  .api-key-hint {
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-    margin-bottom: 12px;
-    font-family: 'Manrope', sans-serif;
-    line-height: 1.5;
-  }
-
   .btn-ai {
     width: 100%;
     margin-top: 14px;
-    padding: 14px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
+    padding: 18px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
     color: var(--cream);
-    background: linear-gradient(135deg, var(--sage) 0%, var(--gold) 100%);
+    background: linear-gradient(135deg, var(--sage) 0%, var(--gold-deep) 100%);
     border: none;
-    border-radius: 10px;
+    border-radius: 14px;
     cursor: pointer;
     transition: all 0.3s ease;
     letter-spacing: 0.02em;
+    box-shadow: 0 6px 20px rgba(122, 133, 103, 0.25);
   }
 
   .btn-ai:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-soft);
+    box-shadow: 0 10px 28px rgba(122, 133, 103, 0.35);
   }
 
   .btn-ai:disabled {
@@ -916,18 +851,6 @@
       </button>
     </div>
 
-    <details class="api-key-block" id="api-key-block">
-      <summary data-tr="ai-toggle"></summary>
-      <p class="api-key-hint" data-tr="api-key-hint"></p>
-      <div class="api-key-row">
-        <input type="password" id="api-key-input" data-tr-placeholder="api-key-placeholder" autocomplete="off" spellcheck="false">
-        <button id="api-key-save" data-tr="api-key-save"></button>
-      </div>
-      <button class="btn-ai" id="ai-btn" disabled>
-        <span data-tr="ai-button"></span>
-      </button>
-    </details>
-
     <div class="suggestions">
       <div class="suggestions-label" data-tr="quick-select"></div>
       <div class="suggestion-chips" id="suggestion-chips"></div>
@@ -939,6 +862,10 @@
 
     <button class="btn-cook" id="cook-btn" disabled>
       <span data-tr="btn-cook"></span>
+    </button>
+
+    <button class="btn-ai" id="ai-btn" disabled>
+      <span data-tr="ai-button"></span>
     </button>
 
     <div id="error-box"></div>
@@ -1058,14 +985,7 @@
     'count-suffix': 'та',
     'no-matches': 'Афсус, бу масаллиқлардан мос таом топилмади. Бошқа масаллиқлар қўшиб кўринг.',
     'recipes-loading-error': 'Рецептлар базасини юклашда хатолик. Саҳифани қайта юкланг.',
-    'ai-toggle': 'AI билан кенгроқ таклиф (ихтиёрий)',
-    'api-key-label': 'Google Gemini API калити',
-    'api-key-placeholder': 'AIzaSy...',
-    'api-key-save': 'Сақлаш',
-    'api-key-saved': 'Сақланди ✓',
-    'api-key-hint': 'AI ишлаши учун бепул Gemini API калити керак. aistudio.google.com/apikey саҳифасидан олинг (бепул).',
-    'ai-button': 'AI билан қўшимча таклиф',
-    'api-key-missing': 'AI учун API калитингизни киритинг',
+    'ai-button': '✨ AI билан янги рецепт олиш',
     'api-error-prefix': 'AI хатоси',
     'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.'
   };
@@ -1103,11 +1023,6 @@
     document.querySelectorAll('[data-tr]').forEach(el => {
       const key = el.getAttribute('data-tr');
       if (key === 'title') return;
-      // "Сақлаш" тугмаси "Сақланди ✓" ҳолатида турган бўлса, унга тегмаймиз
-      if (key === 'api-key-save' && el.classList.contains('saved')) {
-        el.textContent = tr(texts['api-key-saved']);
-        return;
-      }
       if (texts[key]) {
         el.textContent = tr(texts[key]);
       }
@@ -1283,19 +1198,17 @@
   //   AI ҚЎШИМЧА (ИХТИЁРИЙ)
   // ============================================
 
+  // Сайт эгасининг Gemini калити (ҳамма учун ишлайди, фойдаланувчи ҳеч нарса киритмайди)
+  const DEFAULT_GEMINI_KEY = 'AIzaSyDAEqbpPK3XcaEOjw11Px4hA9MjKorly2A';
+
   function getApiKey() {
-    return localStorage.getItem('gemini_api_key') || '';
+    return localStorage.getItem('gemini_api_key') || DEFAULT_GEMINI_KEY;
   }
 
   async function findWithAi() {
     if (selectedIngredients.length === 0) return;
 
     const apiKey = getApiKey();
-    if (!apiKey) {
-      showError(tr(texts['api-key-missing']));
-      document.getElementById('api-key-input').focus();
-      return;
-    }
 
     document.getElementById('loading').classList.add('active');
     document.getElementById('error-box').innerHTML = '';
@@ -1474,44 +1387,18 @@
     if (e.target === e.currentTarget) closeModal();
   });
 
-  // API калитини сақлаш
-  const apiKeyInput = document.getElementById('api-key-input');
-  const apiKeySaveBtn = document.getElementById('api-key-save');
   const aiBtn = document.getElementById('ai-btn');
 
   function syncAiBtnState() {
-    aiBtn.disabled = selectedIngredients.length === 0 || !getApiKey();
+    aiBtn.disabled = selectedIngredients.length === 0;
   }
 
-  // Эски Anthropic калитини олиб ташлаш (агар бўлса)
+  // Эски калитларни тозалаш (агар бўлса)
   if (localStorage.getItem('anthropic_api_key')) {
     localStorage.removeItem('anthropic_api_key');
   }
 
-  apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
-  if (apiKeyInput.value) {
-    apiKeySaveBtn.classList.add('saved');
-    apiKeySaveBtn.textContent = tr(texts['api-key-saved']);
-  }
-  apiKeySaveBtn.addEventListener('click', () => {
-    const v = apiKeyInput.value.trim();
-    if (v) {
-      localStorage.setItem('gemini_api_key', v);
-      apiKeySaveBtn.classList.add('saved');
-      apiKeySaveBtn.textContent = tr(texts['api-key-saved']);
-    } else {
-      localStorage.removeItem('gemini_api_key');
-      apiKeySaveBtn.classList.remove('saved');
-      apiKeySaveBtn.textContent = tr(texts['api-key-save']);
-    }
-    syncAiBtnState();
-  });
-  apiKeyInput.addEventListener('input', () => {
-    apiKeySaveBtn.classList.remove('saved');
-    apiKeySaveBtn.textContent = tr(texts['api-key-save']);
-  });
-
-  // updateButton ни AI тугмаси билан синхронлаш учун кенгайтириш
+  // updateButton'ни AI тугмаси билан синхронлаш
   const originalUpdateButton = updateButton;
   updateButton = function() {
     originalUpdateButton();
