@@ -987,7 +987,9 @@
     'recipes-loading-error': 'Рецептлар базасини юклашда хатолик. Саҳифани қайта юкланг.',
     'ai-button': '✨ AI билан янги рецепт олиш',
     'api-error-prefix': 'AI хатоси',
-    'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.'
+    'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.',
+    'api-error-quota': 'AI квотаси тугаган. Бир оз кутиб қайта уриниб кўринг.',
+    'api-error-region': 'AI хизмати бу регионда ҳозирча мавжуд эмас.'
   };
 
   function switchScript(script) {
@@ -1234,57 +1236,85 @@
 Камида 5 та масаллиқ ва 5 та қадам бўлсин ҳар бир таом учун.
 Фақат JSON массивни қайтар, ҳеч қандай матн ёки markdown формати йўқ.`;
 
-    try {
-      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 4096,
-            responseMimeType: "application/json"
+    // Бир неча моделда кетма-кет уриниб кўриш (квота/регион муаммоси бўлганида)
+    const modelChain = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    let lastError = null;
+    let recipes = null;
+
+    for (const model of modelChain) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.8,
+              maxOutputTokens: 4096,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + response.status);
+          lastError = { status: response.status, message: msg };
+          // Квота/мавжуд эмас хатолари бўлса навбатдаги моделни синаб кўрамиз
+          if (response.status === 429 || response.status === 404 || /quota|not\s*found|limit:\s*0/i.test(msg)) {
+            continue;
           }
-        })
-      });
+          throw new Error(msg);
+        }
 
-      const data = await response.json();
+        const candidate = data.candidates && data.candidates[0];
+        const part = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0];
+        if (!part || typeof part.text !== 'string') {
+          throw new Error('Unexpected response shape');
+        }
 
-      if (!response.ok || data.error) {
-        const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + response.status);
-        throw new Error(msg);
+        let text = part.text.trim();
+        text = text.replace(/```json|```/g, '').trim();
+        const start = text.indexOf('[');
+        const end = text.lastIndexOf(']');
+        if (start !== -1 && end !== -1) text = text.substring(start, end + 1);
+
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          throw new Error('Empty recipes');
+        }
+        recipes = parsed;
+        break;
+      } catch (err) {
+        lastError = lastError || { status: 0, message: err.message };
+        // JSON.parse ёки бошқа хато бўлса — тўхтаймиз, навбатдаги модель ёрдам бермайди
+        if (!(lastError.status === 429 || lastError.status === 404 || /quota|not\s*found|limit:\s*0/i.test(lastError.message))) {
+          break;
+        }
       }
+    }
 
-      const candidate = data.candidates && data.candidates[0];
-      const part = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0];
-      if (!part || typeof part.text !== 'string') {
-        throw new Error('Unexpected response shape');
+    try {
+      if (recipes) {
+        const combined = (currentRecipes && currentRecipes.length > 0) ? currentRecipes.concat(recipes) : recipes;
+        displayRecipes(combined);
+      } else if (lastError) {
+        const m = lastError.message || '';
+        let friendly;
+        if (/quota|limit:\s*0|429/i.test(m)) {
+          friendly = tr(texts['api-error-quota']);
+        } else if (/region|not\s*available|FAILED_PRECONDITION/i.test(m)) {
+          friendly = tr(texts['api-error-region']);
+        } else {
+          friendly = tr(texts['api-error-prefix']) + ': ' + m;
+        }
+        showError(friendly);
       }
-
-      let text = part.text.trim();
-      text = text.replace(/```json|```/g, '').trim();
-
-      const start = text.indexOf('[');
-      const end = text.lastIndexOf(']');
-      if (start !== -1 && end !== -1) {
-        text = text.substring(start, end + 1);
-      }
-
-      const recipes = JSON.parse(text);
-      if (!Array.isArray(recipes) || recipes.length === 0) {
-        throw new Error('Empty recipes');
-      }
-      // AI таклифларини локал натижалардан кейин қўшиб кўрсатиш
-      const combined = (currentRecipes && currentRecipes.length > 0) ? currentRecipes.concat(recipes) : recipes;
-      displayRecipes(combined);
-
-    } catch (err) {
-      console.error(err);
-      showError(tr(texts['api-error-prefix']) + ': ' + (err && err.message ? err.message : tr(texts['api-error-generic'])));
     } finally {
       document.getElementById('loading').classList.remove('active');
     }
