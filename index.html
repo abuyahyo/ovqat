@@ -957,10 +957,7 @@
     'ingredients-label': 'Масаллиқлар',
     'steps-label': 'Тайёрлаш тартиби',
     'count-suffix': 'та',
-    'api-error-prefix': 'AI хатоси',
-    'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.',
-    'api-error-quota': 'AI квотаси тугаган. Бир оз кутиб қайта уриниб кўринг.',
-    'api-error-region': 'AI хизмати бу регионда ҳозирча мавжуд эмас.'
+    'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.'
   };
 
   function switchScript(script) {
@@ -1213,17 +1210,10 @@
 
     if (recipes) {
       displayRecipes(recipes);
-    } else if (lastError) {
-      const m = lastError.message || '';
-      let friendly;
-      if (/quota|limit:\s*0|429/i.test(m)) {
-        friendly = tr(texts['api-error-quota']);
-      } else if (/region|not\s*available|FAILED_PRECONDITION/i.test(m)) {
-        friendly = tr(texts['api-error-region']);
-      } else {
-        friendly = tr(texts['api-error-prefix']) + ': ' + m;
-      }
-      showError(friendly);
+    } else {
+      // Ҳар қандай хатода фойдаланувчига юмшоқ хабар (техник тафсилот яширин)
+      if (lastError) console.warn('AI request failed:', lastError);
+      showError(tr(texts['api-error-busy']));
     }
   }
 
