@@ -957,8 +957,6 @@
     'ingredients-label': 'Масаллиқлар',
     'steps-label': 'Тайёрлаш тартиби',
     'count-suffix': 'та',
-    'no-matches': 'Афсус, бу масаллиқлардан мос таом топилмади. Бошқа масаллиқлар қўшиб кўринг.',
-    'recipes-loading-error': 'Рецептлар базасини юклашда хатолик. Саҳифани қайта юкланг.',
     'api-error-prefix': 'AI хатоси',
     'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.',
     'api-error-quota': 'AI квотаси тугаган. Бир оз кутиб қайта уриниб кўринг.',
@@ -1109,46 +1107,7 @@
   }
 
   // ============================================
-  //   ЛОКАЛ РЕЦЕПТ БАЗАСИ
-  // ============================================
-
-  let localRecipes = [];
-  let recipesLoaded = false;
-
-  async function loadLocalRecipes() {
-    try {
-      const res = await fetch('recipes.json');
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      localRecipes = await res.json();
-      recipesLoaded = true;
-    } catch (err) {
-      console.error('Could not load recipes.json:', err);
-      showError(tr(texts['recipes-loading-error']));
-    }
-  }
-
-  // Кирилл матнни оддий шаклга келтириш (қидирув учун)
-  function normalize(s) {
-    return String(s || '').toLowerCase().replace(/[^\u0400-\u04FFa-z0-9\s]+/g, '').replace(/\s+/g, ' ').trim();
-  }
-
-  function searchLocalRecipes(userIngredients) {
-    const needles = userIngredients.map(normalize).filter(Boolean);
-    if (needles.length === 0) return [];
-    const scored = localRecipes.map(r => {
-      const haystack = normalize((r.ingredients || []).join(' ') + ' ' + (r.name || ''));
-      let score = 0;
-      for (const n of needles) {
-        if (haystack.includes(n)) score++;
-      }
-      return { r, score };
-    }).filter(x => x.score > 0);
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 8).map(x => x.r);
-  }
-
-  // ============================================
-  //   AI + локал зaxирa (ягона тугма)
+  //   AI ҚИДИРУВ
   // ============================================
 
   // Сайт эгасининг Gemini калити (ҳамма учун ишлайди, фойдаланувчи ҳеч нарса киритмайди)
@@ -1158,27 +1117,10 @@
     return localStorage.getItem('gemini_api_key') || DEFAULT_GEMINI_KEY;
   }
 
-  function showLocalFallback() {
-    if (!recipesLoaded) return false;
-    const local = searchLocalRecipes(selectedIngredients);
-    if (local.length === 0) {
-      document.getElementById('results').classList.remove('active');
-      showError(tr(texts['no-matches']));
-      return false;
-    }
-    displayRecipes(local);
-    return true;
-  }
-
   async function findRecipes() {
     if (selectedIngredients.length === 0) return;
 
     const apiKey = getApiKey();
-
-    // Локал базани фондан юклаб қўйиш (агар ҳали юкланмаган бўлса)
-    if (!recipesLoaded) {
-      loadLocalRecipes();
-    }
 
     document.getElementById('loading').classList.add('active');
     document.getElementById('error-box').innerHTML = '';
@@ -1271,22 +1213,17 @@
 
     if (recipes) {
       displayRecipes(recipes);
-    } else {
-      // AI муваффақиятсиз — локал базага қайтиш (фойдаланувчи учун жимгина)
-      const shown = showLocalFallback();
-      if (!shown && lastError) {
-        // Локал ҳам бўш — фақат шунда хато кўрсатамиз
-        const m = lastError.message || '';
-        let friendly;
-        if (/quota|limit:\s*0|429/i.test(m)) {
-          friendly = tr(texts['api-error-quota']);
-        } else if (/region|not\s*available|FAILED_PRECONDITION/i.test(m)) {
-          friendly = tr(texts['api-error-region']);
-        } else {
-          friendly = tr(texts['api-error-prefix']) + ': ' + m;
-        }
-        showError(friendly);
+    } else if (lastError) {
+      const m = lastError.message || '';
+      let friendly;
+      if (/quota|limit:\s*0|429/i.test(m)) {
+        friendly = tr(texts['api-error-quota']);
+      } else if (/region|not\s*available|FAILED_PRECONDITION/i.test(m)) {
+        friendly = tr(texts['api-error-region']);
+      } else {
+        friendly = tr(texts['api-error-prefix']) + ': ' + m;
       }
+      showError(friendly);
     }
   }
 
@@ -1396,8 +1333,6 @@
   document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
   applyScriptToPage();
   renderSuggestions();
-  // Рецепт базасини фондан юклаб қўйиш
-  loadLocalRecipes();
 
   // Service Worker — оффлайн ишлаш ва тез юкланиш учун
   // (Network-first стратегияси: ҳар сафар янги версия олинади, кэш фонда)
