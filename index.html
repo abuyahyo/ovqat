@@ -321,6 +321,71 @@
     border: 1px solid rgba(184, 137, 61, 0.12);
   }
 
+  .servings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--cream-deep) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(184, 137, 61, 0.12);
+  }
+
+  .servings-label {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .servings-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--paper);
+    padding: 4px;
+    border-radius: 100px;
+    border: 1px solid rgba(184, 137, 61, 0.2);
+    box-shadow: 0 2px 8px rgba(138, 98, 40, 0.08);
+  }
+
+  .servings-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .servings-btn:hover:not(:disabled) {
+    background: var(--gold-deep);
+    transform: scale(1.05);
+  }
+
+  .servings-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .servings-count {
+    min-width: 28px;
+    text-align: center;
+    font-family: 'Lora', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gold-deep);
+  }
+
   .ingredient-tag {
     display: inline-flex;
     align-items: center;
@@ -838,6 +903,15 @@
       <div class="empty-state" data-tr="empty-state"></div>
     </div>
 
+    <div class="servings-row">
+      <span class="servings-label" data-tr="servings-label"></span>
+      <div class="servings-control">
+        <button class="servings-btn" id="servings-minus" aria-label="-">−</button>
+        <span class="servings-count" id="servings-count">4</span>
+        <button class="servings-btn" id="servings-plus" aria-label="+">+</button>
+      </div>
+    </div>
+
     <button class="btn-cook" id="cook-btn" disabled>
       <span data-tr="btn-cook"></span>
     </button>
@@ -945,6 +1019,7 @@
     'btn-add': 'Қўшиш',
     'quick-select': 'Тез танлаш учун:',
     'empty-state': 'Ҳозирча бирорта масаллиқ қўшилмаган...',
+    'servings-label': 'Неча кишилик?',
     'btn-cook': 'Таомларни топиш',
     'loading': 'Энг мос таомларни танлаяпман...',
     'results-title': 'Сиз учун таклифлар',
@@ -1022,6 +1097,9 @@
   let selectedIngredients = [];
   let currentRecipes = [];
   let currentRecipeIndex = -1;
+  let servings = 4;
+  const SERVINGS_MIN = 1;
+  const SERVINGS_MAX = 12;
 
   function renderSuggestions() {
     const container = document.getElementById('suggestion-chips');
@@ -1117,6 +1195,7 @@
     document.getElementById('error-box').innerHTML = '';
 
     const prompt = `Сен ўзбек ошпазсан. Қуйидаги масаллиқлар берилган: ${selectedIngredients.join(', ')}.
+Овқат ${servings} кишига тайёрланмоқда — барча масаллиқ миқдорлари шу ${servings} кишилик порциясига ҳисобланган бўлсин.
 
 Шу масаллиқлардан тайёрлаш мумкин бўлган 4-6 та ўзбек ва жаҳон таомларини таклиф қил. Барча таом номлари, тавсифлари ва маълумотлари АЛБАТТА ўзбек тилида ва КИРИЛЛ алифбосида бўлсин.
 
@@ -1282,6 +1361,31 @@
   document.getElementById('btn-cyrillic').addEventListener('click', () => switchScript('cyrillic'));
   document.getElementById('btn-latin').addEventListener('click', () => switchScript('latin'));
   document.getElementById('btn-add-ingredient').addEventListener('click', addIngredient);
+  // Servings picker
+  const servingsCountEl = document.getElementById('servings-count');
+  const servingsMinusBtn = document.getElementById('servings-minus');
+  const servingsPlusBtn = document.getElementById('servings-plus');
+
+  function syncServingsButtons() {
+    servingsMinusBtn.disabled = servings <= SERVINGS_MIN;
+    servingsPlusBtn.disabled = servings >= SERVINGS_MAX;
+    servingsCountEl.textContent = servings;
+  }
+
+  servingsMinusBtn.addEventListener('click', () => {
+    if (servings > SERVINGS_MIN) {
+      servings--;
+      syncServingsButtons();
+    }
+  });
+  servingsPlusBtn.addEventListener('click', () => {
+    if (servings < SERVINGS_MAX) {
+      servings++;
+      syncServingsButtons();
+    }
+  });
+  syncServingsButtons();
+
   document.getElementById('cook-btn').addEventListener('click', findRecipes);
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
