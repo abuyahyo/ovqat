@@ -977,45 +977,6 @@
     color: var(--cream);
   }
 
-  /* --- Voice input mic --- */
-  .input-mic {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--gold);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    padding: 0;
-  }
-
-  .input-mic:hover {
-    background: var(--cream);
-    color: var(--gold-deep);
-  }
-
-  .input-mic.listening {
-    color: var(--burgundy);
-    animation: pulseMic 1.2s ease-in-out infinite;
-  }
-
-  @keyframes pulseMic {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.45; }
-  }
-
-  .input-wrapper input.has-mic {
-    padding-right: 56px;
-  }
-
   @media (max-width: 640px) {
     .container { padding: 20px 16px 60px; }
     .main-card { padding: 28px 20px; }
