@@ -7,7 +7,7 @@
 //  - Ҳар деплойда VERSION'ни бумп қилинг, эски кэш активацияда
 //    автоматик тозаланади.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `ovqat-${VERSION}`;
 const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
