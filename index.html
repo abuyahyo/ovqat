@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бугун нима тайёрлаймиз? · Ошхона ёрдамчиси</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf5ec;
+    --cream-deep: #f3ebd8;
+    --paper: #fefcf7;
+    --ink: #2a1f17;
+    --ink-soft: #5c4a3a;
+    --gold: #b8893d;
+    --gold-deep: #8a6228;
+    --terracotta: #c4633f;
+    --sage: #7a8567;
+    --burgundy: #8b2e2a;
+    --shadow-soft: 0 4px 24px rgba(138, 98, 40, 0.08);
+    --shadow-med: 0 12px 40px rgba(138, 98, 40, 0.14);
+    --shadow-deep: 0 24px 60px rgba(42, 31, 23, 0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(184, 137, 61, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(196, 99, 63, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(122, 133, 103, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23b8893d' opacity='0.18'/%3E%3C/svg%3E");
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .script-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 50;
+    display: inline-flex;
+    background: var(--paper);
+    padding: 5px;
+    border-radius: 100px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(184, 137, 61, 0.2);
+  }
+
+  .script-toggle button {
+    padding: 9px 18px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .script-toggle button.active {
+    background: var(--ink);
+    color: var(--cream);
+    box-shadow: 0 2px 8px rgba(42, 31, 23, 0.2);
+  }
+
+  .script-toggle button:not(.active):hover {
+    color: var(--gold-deep);
+  }
+
+  .header {
+    text-align: center;
+    padding: 40px 0 50px;
+    position: relative;
+  }
+
+  .ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    color: var(--gold);
+  }
+
+  .ornament svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ornament .line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  .header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  .header h1 em {
+    color: var(--gold-deep);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .header p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--ink-soft);
+    max-width: 540px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  .main-card {
+    background: var(--paper);
+    border-radius: 20px;
+    padding: 48px;
+    box-shadow: var(--shadow-med);
+    position: relative;
+    border: 1px solid rgba(184, 137, 61, 0.15);
+  }
+
+  .main-card::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(184, 137, 61, 0.2);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--gold-deep);
+    margin-bottom: 12px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+
+  .input-area {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .input-wrapper {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding: 16px 20px 16px 52px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--cream);
+    border: 1.5px solid rgba(184, 137, 61, 0.25);
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .input-wrapper input:focus {
+    border-color: var(--gold);
+    background: var(--paper);
+    box-shadow: 0 0 0 4px rgba(184, 137, 61, 0.1);
+  }
+
+  .input-wrapper input::placeholder {
+    color: var(--ink-soft);
+    opacity: 0.6;
+  }
+
+  .input-wrapper svg {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+  }
+
+  .btn-add {
+    padding: 16px 28px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cream);
+    background: var(--ink);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-add:hover {
+    background: var(--gold-deep);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .suggestions { margin-bottom: 28px; }
+
+  .suggestions-label {
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+  }
+
+  .suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip-suggest {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px dashed rgba(184, 137, 61, 0.4);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .chip-suggest:hover {
+    background: var(--cream);
+    color: var(--gold-deep);
+    border-color: var(--gold);
+    border-style: solid;
+  }
+
+  .ingredients-list {
+    min-height: 80px;
+    padding: 24px;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--cream-deep) 100%);
+    border-radius: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+    align-content: flex-start;
+    margin-bottom: 32px;
+    border: 1px solid rgba(184, 137, 61, 0.12);
+  }
+
+  .ingredient-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 10px 18px;
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(138, 98, 40, 0.1);
+    border: 1px solid rgba(184, 137, 61, 0.2);
+    animation: tagAppear 0.4s ease;
+  }
+
+  @keyframes tagAppear {
+    from { opacity: 0; transform: scale(0.8) translateY(-4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .ingredient-tag .remove {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    transition: all 0.2s ease;
+  }
+
+  .ingredient-tag .remove:hover {
+    background: var(--burgundy);
+    color: var(--cream);
+  }
+
+  .empty-state {
+    width: 100%;
+    text-align: center;
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    padding: 16px;
+    opacity: 0.7;
+  }
+
+  .btn-cook {
+    width: 100%;
+    padding: 22px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--cream);
+    background: linear-gradient(135deg, var(--gold-deep) 0%, var(--gold) 50%, var(--terracotta) 100%);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(184, 137, 61, 0.3);
+  }
+
+  .btn-cook::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(250, 245, 236, 0.3);
+    border-radius: 11px;
+    pointer-events: none;
+  }
+
+  .btn-cook:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(184, 137, 61, 0.45);
+  }
+
+  .btn-cook:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-cook .icon {
+    margin-right: 10px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .results {
+    margin-top: 50px;
+    display: none;
+  }
+
+  .results.active {
+    display: block;
+    animation: fadeUp 0.6s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .recipe-card {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(184, 137, 61, 0.15);
+    cursor: pointer;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .recipe-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--terracotta), var(--sage));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease;
+  }
+
+  .recipe-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-deep);
+    border-color: var(--gold);
+  }
+
+  .recipe-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .recipe-emoji {
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .recipe-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .recipe-desc {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    line-height: 1.55;
+  }
+
+  .recipe-meta {
+    display: flex;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(184, 137, 61, 0.15);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  .recipe-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .loading.active { display: block; }
+
+  .loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+
+  .loading-spinner::before,
+  .loading-spinner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+
+  .loading-spinner::before {
+    border-top-color: var(--gold);
+    border-right-color: var(--gold);
+    animation: spin 1.2s linear infinite;
+  }
+
+  .loading-spinner::after {
+    border-bottom-color: var(--terracotta);
+    border-left-color: var(--terracotta);
+    animation: spin 1.8s linear infinite reverse;
+    inset: 8px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--ink-soft);
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(42, 31, 23, 0.6);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal {
+    background: var(--paper);
+    border-radius: 20px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 48px;
+    position: relative;
+    box-shadow: var(--shadow-deep);
+    border: 1px solid rgba(184, 137, 61, 0.2);
+    animation: modalUp 0.4s ease;
+  }
+
+  @keyframes modalUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 1px solid rgba(184, 137, 61, 0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    transition: all 0.2s ease;
+  }
+
+  .modal-close:hover {
+    background: var(--burgundy);
+    color: var(--cream);
+    transform: rotate(90deg);
+  }
+
+  .modal-emoji {
+    font-size: 3.5rem;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .modal h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .modal-desc {
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    margin-bottom: 32px;
+  }
+
+  .modal-section { margin-bottom: 28px; }
+
+  .modal-section h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    color: var(--gold-deep);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-section h3::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  .modal-section ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .modal-section ul li {
+    padding: 10px 0 10px 28px;
+    position: relative;
+    color: var(--ink);
+    border-bottom: 1px dashed rgba(184, 137, 61, 0.2);
+  }
+
+  .modal-section ul li:last-child { border-bottom: none; }
+
+  .modal-section ul li::before {
+    content: '◆';
+    position: absolute;
+    left: 8px;
+    color: var(--gold);
+    font-size: 0.7rem;
+    top: 14px;
+  }
+
+  .modal-section ol {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+  }
+
+  .modal-section ol li {
+    padding: 14px 0 14px 48px;
+    position: relative;
+    color: var(--ink);
+    border-bottom: 1px dashed rgba(184, 137, 61, 0.2);
+    line-height: 1.7;
+    counter-increment: step;
+  }
+
+  .modal-section ol li:last-child { border-bottom: none; }
+
+  .modal-section ol li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 32px;
+    height: 32px;
+    background: var(--gold);
+    color: var(--cream);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .modal-meta {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+    background: var(--cream);
+    border-radius: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .modal-meta-item { text-align: center; }
+
+  .modal-meta-item .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .modal-meta-item .value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold-deep);
+  }
+
+  .error {
+    background: rgba(139, 46, 42, 0.08);
+    color: var(--burgundy);
+    padding: 16px 20px;
+    border-radius: 12px;
+    border-left: 3px solid var(--burgundy);
+    margin-top: 20px;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 20px 16px 60px; }
+    .main-card { padding: 28px 20px; }
+    .main-card::before { inset: 6px; }
+    .modal { padding: 32px 20px; }
+    .input-area { flex-direction: column; }
+    .btn-add { width: 100%; justify-content: center; }
+    .header h1 { font-size: 2.2rem; }
+    .header { padding-top: 70px; }
+    .script-toggle { top: 16px; right: 16px; }
+    .script-toggle button { padding: 7px 14px; font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Алифбо ўзгартиргич -->
+<div class="script-toggle">
+  <button id="btn-cyrillic" class="active" onclick="switchScript('cyrillic')">Кирилл</button>
+  <button id="btn-latin" onclick="switchScript('latin')">Lotin</button>
+</div>
+
+<div class="container">
+
+  <header class="header">
+    <div class="ornament">
+      <span class="line"></span>
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M16 4 L26 16 L16 28 L6 16 Z"/>
+        <path d="M16 10 L22 16 L16 22 L10 16 Z" opacity="0.5"/>
+      </svg>
+      <span class="line"></span>
+    </div>
+    <h1 data-tr="title"></h1>
+    <p data-tr="subtitle"></p>
+  </header>
+
+  <main class="main-card">
+    
+    <span class="section-label" data-tr="step-label"></span>
+    <h2 class="section-title" data-tr="step-title"></h2>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input 
+          type="text" 
+          id="ingredient-input" 
+          data-tr-placeholder="input-placeholder"
+          autocomplete="off"
+        >
+      </div>
+      <button class="btn-add" onclick="addIngredient()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span data-tr="btn-add"></span>
+      </button>
+    </div>
+
+    <div class="suggestions">
+      <div class="suggestions-label" data-tr="quick-select"></div>
+      <div class="suggestion-chips" id="suggestion-chips"></div>
+    </div>
+
+    <div class="ingredients-list" id="ingredients-list">
+      <div class="empty-state" data-tr="empty-state"></div>
+    </div>
+
+    <button class="btn-cook" id="cook-btn" onclick="findRecipes()" disabled>
+      <span data-tr="btn-cook"></span>
+    </button>
+
+    <div id="error-box"></div>
+
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <p data-tr="loading"></p>
+    </div>
+
+    <div class="results" id="results">
+      <div class="results-header">
+        <div class="ornament">
+          <span class="line"></span>
+          <svg viewBox="0 0 32 32" fill="currentColor" style="color: var(--gold);">
+            <circle cx="16" cy="16" r="4"/>
+            <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1"/>
+          </svg>
+          <span class="line"></span>
+        </div>
+        <h2 class="section-title" style="text-align: center; margin-bottom: 8px;" data-tr="results-title"></h2>
+        <p style="color: var(--ink-soft); font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.1rem;" data-tr="results-subtitle"></p>
+      </div>
+      <div class="recipes-grid" id="recipes-grid"></div>
+    </div>
+
+  </main>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModal()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+  /* ============================================
+     КИРИЛЛ ↔ ЛОТИН АЛИФБО ЎЗГАРТИРГИЧИ
+     ============================================ */
+  
+  let currentScript = localStorage.getItem('script') || 'cyrillic';
+
+  // Кирилл → Лотин таржима жадвали (ўзбек тили)
+  const cyrToLat = {
+    'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Ё':'Yo','Ж':'J','З':'Z',
+    'И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R',
+    'С':'S','Т':'T','У':'U','Ф':'F','Х':'X','Ч':'Ch','Ш':'Sh','Ъ':'ʼ',
+    'Э':'E','Ю':'Yu','Я':'Ya','Қ':'Q','Ў':'Oʻ','Ғ':'Gʻ','Ҳ':'H',
+    'а':'a','б':'b','в':'v','г':'g','д':'d','ё':'yo','ж':'j','з':'z',
+    'и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r',
+    'с':'s','т':'t','у':'u','ф':'f','х':'x','ч':'ch','ш':'sh','ъ':'ʼ',
+    'э':'e','ю':'yu','я':'ya','қ':'q','ў':'oʻ','ғ':'gʻ','ҳ':'h'
+  };
+
+  function toLatin(text) {
+    if (!text) return text;
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const prev = text[i - 1] || ' ';
+      
+      // "Е/е" учун: сўз бошида = Ye/ye, ўртасида = e
+      if (ch === 'Е') {
+        result += /[аеёиоуыэюяАЕЁИОУЫЭЮЯъьЪЬ]/.test(prev) || /^[\sa-zA-Z]/.test(prev) === false && /[^\u0400-\u04FF]/.test(prev) ? 
+                  (/[\s\.,!?\-—:;"'(]/.test(prev) || i === 0 ? 'Ye' : 'e') : 'Ye';
+        // Соддалаштириш: сўз бошида Ye, акс ҳолда e
+        result = result.slice(0, -2);
+        if (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) {
+          result += 'Ye';
+        } else {
+          result += 'e';
+        }
+        continue;
+      }
+      if (ch === 'е') {
+        if (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) {
+          result += 'ye';
+        } else {
+          result += 'e';
+        }
+        continue;
+      }
+      
+      // "Ц/ц" учун: сўз бошида = S/s, ўртасида = ts
+      if (ch === 'Ц') {
+        result += (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) ? 'S' : 'Ts';
+        continue;
+      }
+      if (ch === 'ц') {
+        result += (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) ? 's' : 'ts';
+        continue;
+      }
+      
+      result += cyrToLat[ch] !== undefined ? cyrToLat[ch] : ch;
+    }
+    return result;
+  }
+
+  function tr(cyrillicText) {
+    return currentScript === 'latin' ? toLatin(cyrillicText) : cyrillicText;
+  }
+
+  // Барча матнлар (кирилл асл)
+  const texts = {
+    'title': 'Бугун нима тайёрлаймиз?',
+    'subtitle': 'Уйингиздаги масаллиқларни айтинг — мен сизга мазали таомлар таклиф қилай',
+    'step-label': 'Бошланғич қадам',
+    'step-title': 'Масаллиқларни киритинг',
+    'btn-add': 'Қўшиш',
+    'quick-select': 'Тез танлаш учун:',
+    'empty-state': 'Ҳозирча бирорта масаллиқ қўшилмаган...',
+    'btn-cook': 'Таомларни топиш',
+    'loading': 'Энг мос таомларни танлаяпман...',
+    'results-title': 'Сиз учун таклифлар',
+    'results-subtitle': 'Таомни тўлиқ рецепти учун босинг',
+    'input-placeholder': 'Масалан: гўшт, картошка, пиёз...',
+    'title-emphasis': 'тайёрлаймиз'
+  };
+
+  function switchScript(script) {
+    currentScript = script;
+    localStorage.setItem('script', script);
+    
+    document.getElementById('btn-cyrillic').classList.toggle('active', script === 'cyrillic');
+    document.getElementById('btn-latin').classList.toggle('active', script === 'latin');
+    
+    applyScriptToPage();
+    renderSuggestions();
+    renderIngredients();
+    
+    if (currentRecipes.length > 0) {
+      displayRecipes(currentRecipes);
+    }
+    
+    if (document.getElementById('modal-overlay').classList.contains('active') && currentRecipeIndex !== -1) {
+      showRecipe(currentRecipeIndex);
+    }
+  }
+
+  function applyScriptToPage() {
+    // Сарлавҳани махсус ишлаб чиқиш ("тайёрлаймиз" сўзи em ичида)
+    const titleEl = document.querySelector('[data-tr="title"]');
+    if (titleEl) {
+      const before = tr('Бугун нима');
+      const emphasis = tr('тайёрлаймиз');
+      titleEl.innerHTML = `${before} <em>${emphasis}</em>?`;
+    }
+
+    // Қолган элементлар
+    document.querySelectorAll('[data-tr]').forEach(el => {
+      const key = el.getAttribute('data-tr');
+      if (key === 'title') return;
+      if (texts[key]) {
+        el.textContent = tr(texts[key]);
+      }
+    });
+
+    document.querySelectorAll('[data-tr-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-tr-placeholder');
+      if (texts[key]) {
+        el.placeholder = tr(texts[key]);
+      }
+    });
+
+    document.documentElement.lang = currentScript === 'latin' ? 'uz-Latn' : 'uz-Cyrl';
+  }
+
+  /* ============================================
+     ИЛОВА ФУНКЦИЯЛАРИ
+     ============================================ */
+
+  const commonIngredients = [
+    'Гўшт', 'Товуқ гўшти', 'Қўй гўшти', 'Картошка', 'Пиёз', 'Сабзи', 
+    'Помидор', 'Бодринг', 'Қалампир', 'Саримсоқ', 'Гуруч', 'Макарон',
+    'Тухум', 'Сут', 'Қаймоқ', 'Сариёғ', 'Ун', 'Қанд', 'Туз',
+    'Лавлаги', 'Карам', 'Қовоқ', 'Бақлажон', 'Лимон', 'Балиқ'
+  ];
+
+  let selectedIngredients = [];
+  let currentRecipes = [];
+  let currentRecipeIndex = -1;
+
+  function renderSuggestions() {
+    const container = document.getElementById('suggestion-chips');
+    container.innerHTML = commonIngredients
+      .filter(item => !selectedIngredients.includes(item))
+      .slice(0, 12)
+      .map(item => `<button class="chip-suggest" onclick="addIngredientFromChip('${item}')">+ ${tr(item)}</button>`)
+      .join('');
+  }
+
+  function addIngredient() {
+    const input = document.getElementById('ingredient-input');
+    const value = input.value.trim();
+    if (value && !selectedIngredients.includes(value)) {
+      selectedIngredients.push(value);
+      input.value = '';
+      renderIngredients();
+      renderSuggestions();
+      updateButton();
+    }
+    input.focus();
+  }
+
+  function addIngredientFromChip(name) {
+    if (!selectedIngredients.includes(name)) {
+      selectedIngredients.push(name);
+      renderIngredients();
+      renderSuggestions();
+      updateButton();
+    }
+  }
+
+  function removeIngredient(index) {
+    selectedIngredients.splice(index, 1);
+    renderIngredients();
+    renderSuggestions();
+    updateButton();
+  }
+
+  function renderIngredients() {
+    const container = document.getElementById('ingredients-list');
+    if (selectedIngredients.length === 0) {
+      container.innerHTML = `<div class="empty-state">${tr(texts['empty-state'])}</div>`;
+      return;
+    }
+    container.innerHTML = selectedIngredients.map((item, i) => `
+      <div class="ingredient-tag">
+        <span>${tr(item)}</span>
+        <button class="remove" onclick="removeIngredient(${i})" aria-label="${tr('Ўчириш')}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function updateButton() {
+    const btn = document.getElementById('cook-btn');
+    btn.disabled = selectedIngredients.length === 0;
+  }
+
+  document.getElementById('ingredient-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addIngredient();
+    }
+  });
+
+  function showError(message) {
+    const errorBox = document.getElementById('error-box');
+    errorBox.innerHTML = `<div class="error">⚠ ${message}</div>`;
+    setTimeout(() => { errorBox.innerHTML = ''; }, 5000);
+  }
+
+  async function findRecipes() {
+    if (selectedIngredients.length === 0) return;
+
+    document.getElementById('loading').classList.add('active');
+    document.getElementById('results').classList.remove('active');
+    document.getElementById('error-box').innerHTML = '';
+
+    const prompt = `Сен ўзбек ошпазсан. Қуйидаги масаллиқлар берилган: ${selectedIngredients.join(', ')}.
+
+Шу масаллиқлардан тайёрлаш мумкин бўлган 4-6 та ўзбек ва жаҳон таомларини таклиф қил. Барча таом номлари, тавсифлари ва маълумотлари АЛБАТТА ўзбек тилида ва КИРИЛЛ алифбосида бўлсин.
+
+Фақат JSON форматида жавоб бер, бошқа ҳеч нарса ёзма. Мисол формат:
+[
+  {
+    "emoji": "🍲",
+    "name": "Таом номи",
+    "description": "Қисқа тавсиф (15-20 сўз)",
+    "time": "30 дақиқа",
+    "difficulty": "Осон",
+    "ingredients": ["масаллиқ 1 - миқдор", "масаллиқ 2 - миқдор"],
+    "steps": ["1-қадам тавсифи", "2-қадам тавсифи", "3-қадам тавсифи"]
+  }
+]
+
+Қийинлик: "Осон", "Ўртача", "Қийин" дан танла.
+Камида 5 та масаллиқ ва 5 та қадам бўлсин ҳар бир таом учун.
+Фақат JSON массивни қайтар, ҳеч қандай матн ёки markdown формати йўқ.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 3000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      let text = data.content[0].text.trim();
+      
+      text = text.replace(/```json|```/g, '').trim();
+      
+      const start = text.indexOf('[');
+      const end = text.lastIndexOf(']');
+      if (start !== -1 && end !== -1) {
+        text = text.substring(start, end + 1);
+      }
+      
+      const recipes = JSON.parse(text);
+      displayRecipes(recipes);
+      
+    } catch (err) {
+      console.error(err);
+      showError(tr('Кечирасиз, таомларни топишда хатолик юз берди. Қайта уриниб кўринг.'));
+    } finally {
+      document.getElementById('loading').classList.remove('active');
+    }
+  }
+
+  function displayRecipes(recipes) {
+    currentRecipes = recipes;
+    const grid = document.getElementById('recipes-grid');
+    grid.innerHTML = recipes.map((r, i) => `
+      <article class="recipe-card" onclick="showRecipe(${i})">
+        <span class="recipe-emoji">${r.emoji || '🍽'}</span>
+        <h3 class="recipe-name">${tr(r.name)}</h3>
+        <p class="recipe-desc">${tr(r.description)}</p>
+        <div class="recipe-meta">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            ${tr(r.time || '—')}
+          </span>
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            ${tr(r.difficulty || 'Ўртача')}
+          </span>
+        </div>
+      </article>
+    `).join('');
+    document.getElementById('results').classList.add('active');
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function showRecipe(index) {
+    currentRecipeIndex = index;
+    const r = currentRecipes[index];
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <div class="modal-emoji">${r.emoji || '🍽'}</div>
+      <h2>${tr(r.name)}</h2>
+      <p class="modal-desc">${tr(r.description)}</p>
+      
+      <div class="modal-meta">
+        <div class="modal-meta-item">
+          <div class="label">${tr('Вақт')}</div>
+          <div class="value">${tr(r.time || '—')}</div>
+        </div>
+        <div class="modal-meta-item">
+          <div class="label">${tr('Қийинлик')}</div>
+          <div class="value">${tr(r.difficulty || '—')}</div>
+        </div>
+        <div class="modal-meta-item">
+          <div class="label">${tr('Масаллиқлар')}</div>
+          <div class="value">${(r.ingredients || []).length} ${tr('та')}</div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>${tr('Масаллиқлар')}</h3>
+        <ul>
+          ${(r.ingredients || []).map(i => `<li>${tr(i)}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="modal-section">
+        <h3>${tr('Тайёрлаш тартиби')}</h3>
+        <ol>
+          ${(r.steps || []).map(s => `<li>${tr(s)}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+    document.getElementById('modal-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+    currentRecipeIndex = -1;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Илк юкланиш
+  document.getElementById('btn-cyrillic').classList.toggle('active', currentScript === 'cyrillic');
+  document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
+  applyScriptToPage();
+  renderSuggestions();
+</script>
+
+</body>
+</html>
