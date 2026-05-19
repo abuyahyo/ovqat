@@ -69,6 +69,9 @@ export default {
 
         const text = await upstream.text();
 
+        // Debug log: which model, status, body length, first/last chars
+        console.log(`[${model}] status=${upstream.status} bytes=${text.length} head=${text.slice(0, 200)} tail=${text.slice(-200)}`);
+
         if (upstream.ok) {
           return new Response(text, {
             status: 200,
