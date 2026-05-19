@@ -761,6 +761,64 @@
     font-size: 0.95rem;
   }
 
+  .api-key-block {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: var(--cream);
+    border-radius: 12px;
+    border: 1px dashed rgba(184, 137, 61, 0.35);
+  }
+
+  .api-key-block summary {
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gold-deep);
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+
+  .api-key-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .api-key-row input {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px 16px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid rgba(184, 137, 61, 0.25);
+    border-radius: 10px;
+    outline: none;
+  }
+
+  .api-key-row input:focus {
+    border-color: var(--gold);
+  }
+
+  .api-key-row button {
+    padding: 12px 22px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--cream);
+    background: var(--ink);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .api-key-row button:hover { background: var(--gold-deep); }
+  .api-key-row button.saved { background: var(--sage); }
+
   @media (max-width: 640px) {
     .container { padding: 20px 16px 60px; }
     .main-card { padding: 28px 20px; }
@@ -779,8 +837,8 @@
 
 <!-- Алифбо ўзгартиргич -->
 <div class="script-toggle">
-  <button id="btn-cyrillic" class="active" onclick="switchScript('cyrillic')">Кирилл</button>
-  <button id="btn-latin" onclick="switchScript('latin')">Lotin</button>
+  <button id="btn-cyrillic" class="active" data-script="cyrillic">Кирилл</button>
+  <button id="btn-latin" data-script="latin">Lotin</button>
 </div>
 
 <div class="container">
@@ -816,13 +874,21 @@
           autocomplete="off"
         >
       </div>
-      <button class="btn-add" onclick="addIngredient()">
+      <button class="btn-add" id="btn-add-ingredient">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path d="M12 5v14M5 12h14"/>
         </svg>
         <span data-tr="btn-add"></span>
       </button>
     </div>
+
+    <details class="api-key-block" id="api-key-block">
+      <summary data-tr="api-key-label"></summary>
+      <div class="api-key-row">
+        <input type="password" id="api-key-input" data-tr-placeholder="api-key-placeholder" autocomplete="off" spellcheck="false">
+        <button id="api-key-save" data-tr="api-key-save"></button>
+      </div>
+    </details>
 
     <div class="suggestions">
       <div class="suggestions-label" data-tr="quick-select"></div>
@@ -833,7 +899,7 @@
       <div class="empty-state" data-tr="empty-state"></div>
     </div>
 
-    <button class="btn-cook" id="cook-btn" onclick="findRecipes()" disabled>
+    <button class="btn-cook" id="cook-btn" disabled>
       <span data-tr="btn-cook"></span>
     </button>
 
@@ -864,9 +930,9 @@
 
 </div>
 
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) closeModal()">
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content">
-    <button class="modal-close" onclick="closeModal()">
+    <button class="modal-close" id="modal-close-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -881,6 +947,17 @@
      ============================================ */
   
   let currentScript = localStorage.getItem('script') || 'cyrillic';
+
+  // HTML escape (XSS ҳимояси)
+  function esc(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   // Кирилл → Лотин таржима жадвали (ўзбек тили)
   const cyrToLat = {
@@ -901,37 +978,15 @@
       const ch = text[i];
       const prev = text[i - 1] || ' ';
       
+      const isWordStart = i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev);
+
       // "Е/е" учун: сўз бошида = Ye/ye, ўртасида = e
-      if (ch === 'Е') {
-        result += /[аеёиоуыэюяАЕЁИОУЫЭЮЯъьЪЬ]/.test(prev) || /^[\sa-zA-Z]/.test(prev) === false && /[^\u0400-\u04FF]/.test(prev) ? 
-                  (/[\s\.,!?\-—:;"'(]/.test(prev) || i === 0 ? 'Ye' : 'e') : 'Ye';
-        // Соддалаштириш: сўз бошида Ye, акс ҳолда e
-        result = result.slice(0, -2);
-        if (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) {
-          result += 'Ye';
-        } else {
-          result += 'e';
-        }
-        continue;
-      }
-      if (ch === 'е') {
-        if (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) {
-          result += 'ye';
-        } else {
-          result += 'e';
-        }
-        continue;
-      }
-      
+      if (ch === 'Е') { result += isWordStart ? 'Ye' : 'e'; continue; }
+      if (ch === 'е') { result += isWordStart ? 'ye' : 'e'; continue; }
+
       // "Ц/ц" учун: сўз бошида = S/s, ўртасида = ts
-      if (ch === 'Ц') {
-        result += (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) ? 'S' : 'Ts';
-        continue;
-      }
-      if (ch === 'ц') {
-        result += (i === 0 || /[\s\.,!?\-—:;"'(«»\n]/.test(prev)) ? 's' : 'ts';
-        continue;
-      }
+      if (ch === 'Ц') { result += isWordStart ? 'S' : 'Ts'; continue; }
+      if (ch === 'ц') { result += isWordStart ? 's' : 'ts'; continue; }
       
       result += cyrToLat[ch] !== undefined ? cyrToLat[ch] : ch;
     }
@@ -956,7 +1011,20 @@
     'results-title': 'Сиз учун таклифлар',
     'results-subtitle': 'Таомни тўлиқ рецепти учун босинг',
     'input-placeholder': 'Масалан: гўшт, картошка, пиёз...',
-    'title-emphasis': 'тайёрлаймиз'
+    'title-emphasis': 'тайёрлаймиз',
+    'remove': 'Ўчириш',
+    'time-label': 'Вақт',
+    'difficulty-label': 'Қийинлик',
+    'ingredients-label': 'Масаллиқлар',
+    'steps-label': 'Тайёрлаш тартиби',
+    'count-suffix': 'та',
+    'api-key-label': 'Anthropic API калити',
+    'api-key-placeholder': 'sk-ant-...',
+    'api-key-save': 'Сақлаш',
+    'api-key-saved': 'Сақланди ✓',
+    'api-key-missing': 'Аввал API калитингизни киритинг',
+    'api-error-generic': 'Кечирасиз, таомларни топишда хатолик юз берди. Қайта уриниб кўринг.',
+    'api-error-prefix': 'API хатоси'
   };
 
   function switchScript(script) {
@@ -992,6 +1060,11 @@
     document.querySelectorAll('[data-tr]').forEach(el => {
       const key = el.getAttribute('data-tr');
       if (key === 'title') return;
+      // "Сақлаш" тугмаси "Сақланди ✓" ҳолатида турган бўлса, унга тегмаймиз
+      if (key === 'api-key-save' && el.classList.contains('saved')) {
+        el.textContent = tr(texts['api-key-saved']);
+        return;
+      }
       if (texts[key]) {
         el.textContent = tr(texts[key]);
       }
@@ -1027,8 +1100,11 @@
     container.innerHTML = commonIngredients
       .filter(item => !selectedIngredients.includes(item))
       .slice(0, 12)
-      .map(item => `<button class="chip-suggest" onclick="addIngredientFromChip('${item}')">+ ${tr(item)}</button>`)
+      .map(item => `<button class="chip-suggest" data-name="${esc(item)}">+ ${esc(tr(item))}</button>`)
       .join('');
+    container.querySelectorAll('.chip-suggest').forEach(btn => {
+      btn.addEventListener('click', () => addIngredientFromChip(btn.dataset.name));
+    });
   }
 
   function addIngredient() {
@@ -1063,19 +1139,22 @@
   function renderIngredients() {
     const container = document.getElementById('ingredients-list');
     if (selectedIngredients.length === 0) {
-      container.innerHTML = `<div class="empty-state">${tr(texts['empty-state'])}</div>`;
+      container.innerHTML = `<div class="empty-state">${esc(tr(texts['empty-state']))}</div>`;
       return;
     }
     container.innerHTML = selectedIngredients.map((item, i) => `
       <div class="ingredient-tag">
-        <span>${tr(item)}</span>
-        <button class="remove" onclick="removeIngredient(${i})" aria-label="${tr('Ўчириш')}">
+        <span>${esc(tr(item))}</span>
+        <button class="remove" data-index="${i}" aria-label="${esc(tr(texts['remove']))}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
       </div>
     `).join('');
+    container.querySelectorAll('.ingredient-tag .remove').forEach(btn => {
+      btn.addEventListener('click', () => removeIngredient(Number(btn.dataset.index)));
+    });
   }
 
   function updateButton() {
@@ -1092,12 +1171,23 @@
 
   function showError(message) {
     const errorBox = document.getElementById('error-box');
-    errorBox.innerHTML = `<div class="error">⚠ ${message}</div>`;
+    errorBox.innerHTML = `<div class="error">⚠ ${esc(message)}</div>`;
     setTimeout(() => { errorBox.innerHTML = ''; }, 5000);
+  }
+
+  function getApiKey() {
+    return localStorage.getItem('anthropic_api_key') || '';
   }
 
   async function findRecipes() {
     if (selectedIngredients.length === 0) return;
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      showError(tr(texts['api-key-missing']));
+      document.getElementById('api-key-input').focus();
+      return;
+    }
 
     document.getElementById('loading').classList.add('active');
     document.getElementById('results').classList.remove('active');
@@ -1127,31 +1217,47 @@
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-5",
           max_tokens: 3000,
           messages: [{ role: "user", content: prompt }]
         })
       });
 
       const data = await response.json();
+
+      if (!response.ok || data.error) {
+        const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + response.status);
+        throw new Error(msg);
+      }
+      if (!data.content || !data.content[0] || typeof data.content[0].text !== 'string') {
+        throw new Error('Unexpected response shape');
+      }
+
       let text = data.content[0].text.trim();
-      
       text = text.replace(/```json|```/g, '').trim();
-      
+
       const start = text.indexOf('[');
       const end = text.lastIndexOf(']');
       if (start !== -1 && end !== -1) {
         text = text.substring(start, end + 1);
       }
-      
+
       const recipes = JSON.parse(text);
+      if (!Array.isArray(recipes) || recipes.length === 0) {
+        throw new Error('Empty recipes');
+      }
       displayRecipes(recipes);
-      
+
     } catch (err) {
       console.error(err);
-      showError(tr('Кечирасиз, таомларни топишда хатолик юз берди. Қайта уриниб кўринг.'));
+      showError(tr(texts['api-error-prefix']) + ': ' + (err && err.message ? err.message : tr(texts['api-error-generic'])));
     } finally {
       document.getElementById('loading').classList.remove('active');
     }
@@ -1161,27 +1267,30 @@
     currentRecipes = recipes;
     const grid = document.getElementById('recipes-grid');
     grid.innerHTML = recipes.map((r, i) => `
-      <article class="recipe-card" onclick="showRecipe(${i})">
-        <span class="recipe-emoji">${r.emoji || '🍽'}</span>
-        <h3 class="recipe-name">${tr(r.name)}</h3>
-        <p class="recipe-desc">${tr(r.description)}</p>
+      <article class="recipe-card" data-index="${i}">
+        <span class="recipe-emoji">${esc(r.emoji || '🍽')}</span>
+        <h3 class="recipe-name">${esc(tr(r.name))}</h3>
+        <p class="recipe-desc">${esc(tr(r.description))}</p>
         <div class="recipe-meta">
           <span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
-            ${tr(r.time || '—')}
+            ${esc(tr(r.time || '—'))}
           </span>
           <span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
-            ${tr(r.difficulty || 'Ўртача')}
+            ${esc(tr(r.difficulty || 'Ўртача'))}
           </span>
         </div>
       </article>
     `).join('');
+    grid.querySelectorAll('.recipe-card').forEach(card => {
+      card.addEventListener('click', () => showRecipe(Number(card.dataset.index)));
+    });
     document.getElementById('results').classList.add('active');
     setTimeout(() => {
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1193,36 +1302,36 @@
     const r = currentRecipes[index];
     const body = document.getElementById('modal-body');
     body.innerHTML = `
-      <div class="modal-emoji">${r.emoji || '🍽'}</div>
-      <h2>${tr(r.name)}</h2>
-      <p class="modal-desc">${tr(r.description)}</p>
+      <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
+      <h2>${esc(tr(r.name))}</h2>
+      <p class="modal-desc">${esc(tr(r.description))}</p>
       
       <div class="modal-meta">
         <div class="modal-meta-item">
-          <div class="label">${tr('Вақт')}</div>
-          <div class="value">${tr(r.time || '—')}</div>
+          <div class="label">${esc(tr(texts['time-label']))}</div>
+          <div class="value">${esc(tr(r.time || '—'))}</div>
         </div>
         <div class="modal-meta-item">
-          <div class="label">${tr('Қийинлик')}</div>
-          <div class="value">${tr(r.difficulty || '—')}</div>
+          <div class="label">${esc(tr(texts['difficulty-label']))}</div>
+          <div class="value">${esc(tr(r.difficulty || '—'))}</div>
         </div>
         <div class="modal-meta-item">
-          <div class="label">${tr('Масаллиқлар')}</div>
-          <div class="value">${(r.ingredients || []).length} ${tr('та')}</div>
+          <div class="label">${esc(tr(texts['ingredients-label']))}</div>
+          <div class="value">${(r.ingredients || []).length} ${esc(tr(texts['count-suffix']))}</div>
         </div>
       </div>
 
       <div class="modal-section">
-        <h3>${tr('Масаллиқлар')}</h3>
+        <h3>${esc(tr(texts['ingredients-label']))}</h3>
         <ul>
-          ${(r.ingredients || []).map(i => `<li>${tr(i)}</li>`).join('')}
+          ${(r.ingredients || []).map(i => `<li>${esc(tr(i))}</li>`).join('')}
         </ul>
       </div>
 
       <div class="modal-section">
-        <h3>${tr('Тайёрлаш тартиби')}</h3>
+        <h3>${esc(tr(texts['steps-label']))}</h3>
         <ol>
-          ${(r.steps || []).map(s => `<li>${tr(s)}</li>`).join('')}
+          ${(r.steps || []).map(s => `<li>${esc(tr(s))}</li>`).join('')}
         </ol>
       </div>
     `;
@@ -1238,6 +1347,41 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
+  });
+
+  // Воқеа тингловчилари
+  document.getElementById('btn-cyrillic').addEventListener('click', () => switchScript('cyrillic'));
+  document.getElementById('btn-latin').addEventListener('click', () => switchScript('latin'));
+  document.getElementById('btn-add-ingredient').addEventListener('click', addIngredient);
+  document.getElementById('cook-btn').addEventListener('click', findRecipes);
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  // API калитини сақлаш
+  const apiKeyInput = document.getElementById('api-key-input');
+  const apiKeySaveBtn = document.getElementById('api-key-save');
+  apiKeyInput.value = localStorage.getItem('anthropic_api_key') || '';
+  if (apiKeyInput.value) {
+    apiKeySaveBtn.classList.add('saved');
+    apiKeySaveBtn.textContent = tr(texts['api-key-saved']);
+  }
+  apiKeySaveBtn.addEventListener('click', () => {
+    const v = apiKeyInput.value.trim();
+    if (v) {
+      localStorage.setItem('anthropic_api_key', v);
+      apiKeySaveBtn.classList.add('saved');
+      apiKeySaveBtn.textContent = tr(texts['api-key-saved']);
+    } else {
+      localStorage.removeItem('anthropic_api_key');
+      apiKeySaveBtn.classList.remove('saved');
+      apiKeySaveBtn.textContent = tr(texts['api-key-save']);
+    }
+  });
+  apiKeyInput.addEventListener('input', () => {
+    apiKeySaveBtn.classList.remove('saved');
+    apiKeySaveBtn.textContent = tr(texts['api-key-save']);
   });
 
   // Илк юкланиш
