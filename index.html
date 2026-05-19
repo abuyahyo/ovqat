@@ -761,33 +761,6 @@
     font-size: 0.95rem;
   }
 
-  .btn-ai {
-    width: 100%;
-    margin-top: 14px;
-    padding: 18px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.15rem;
-    font-weight: 500;
-    color: var(--cream);
-    background: linear-gradient(135deg, var(--sage) 0%, var(--gold-deep) 100%);
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    letter-spacing: 0.02em;
-    box-shadow: 0 6px 20px rgba(122, 133, 103, 0.25);
-  }
-
-  .btn-ai:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(122, 133, 103, 0.35);
-  }
-
-  .btn-ai:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
   @media (max-width: 640px) {
     .container { padding: 20px 16px 60px; }
     .main-card { padding: 28px 20px; }
@@ -862,10 +835,6 @@
 
     <button class="btn-cook" id="cook-btn" disabled>
       <span data-tr="btn-cook"></span>
-    </button>
-
-    <button class="btn-ai" id="ai-btn" disabled>
-      <span data-tr="ai-button"></span>
     </button>
 
     <div id="error-box"></div>
@@ -971,7 +940,7 @@
     'btn-add': 'Қўшиш',
     'quick-select': 'Тез танлаш учун:',
     'empty-state': 'Ҳозирча бирорта масаллиқ қўшилмаган...',
-    'btn-cook': 'Таомларни топиш',
+    'btn-cook': '✨ Таомларни топиш',
     'loading': 'Энг мос таомларни танлаяпман...',
     'results-title': 'Сиз учун таклифлар',
     'results-subtitle': 'Таомни тўлиқ рецепти учун босинг',
@@ -985,7 +954,6 @@
     'count-suffix': 'та',
     'no-matches': 'Афсус, бу масаллиқлардан мос таом топилмади. Бошқа масаллиқлар қўшиб кўринг.',
     'recipes-loading-error': 'Рецептлар базасини юклашда хатолик. Саҳифани қайта юкланг.',
-    'ai-button': '✨ AI билан янги рецепт олиш',
     'api-error-prefix': 'AI хатоси',
     'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.',
     'api-error-quota': 'AI квотаси тугаган. Бир оз кутиб қайта уриниб кўринг.',
@@ -1174,30 +1142,8 @@
     return scored.slice(0, 8).map(x => x.r);
   }
 
-  async function findRecipes() {
-    if (selectedIngredients.length === 0) return;
-
-    if (!recipesLoaded) {
-      document.getElementById('loading').classList.add('active');
-      await loadLocalRecipes();
-      document.getElementById('loading').classList.remove('active');
-      if (!recipesLoaded) return;
-    }
-
-    document.getElementById('error-box').innerHTML = '';
-    const recipes = searchLocalRecipes(selectedIngredients);
-
-    if (recipes.length === 0) {
-      document.getElementById('results').classList.remove('active');
-      showError(tr(texts['no-matches']));
-      return;
-    }
-
-    displayRecipes(recipes);
-  }
-
   // ============================================
-  //   AI ҚЎШИМЧА (ИХТИЁРИЙ)
+  //   AI + локал зaxирa (ягона тугма)
   // ============================================
 
   // Сайт эгасининг Gemini калити (ҳамма учун ишлайди, фойдаланувчи ҳеч нарса киритмайди)
@@ -1207,10 +1153,27 @@
     return localStorage.getItem('gemini_api_key') || DEFAULT_GEMINI_KEY;
   }
 
-  async function findWithAi() {
+  function showLocalFallback() {
+    if (!recipesLoaded) return false;
+    const local = searchLocalRecipes(selectedIngredients);
+    if (local.length === 0) {
+      document.getElementById('results').classList.remove('active');
+      showError(tr(texts['no-matches']));
+      return false;
+    }
+    displayRecipes(local);
+    return true;
+  }
+
+  async function findRecipes() {
     if (selectedIngredients.length === 0) return;
 
     const apiKey = getApiKey();
+
+    // Локал базани фондан юклаб қўйиш (агар ҳали юкланмаган бўлса)
+    if (!recipesLoaded) {
+      loadLocalRecipes();
+    }
 
     document.getElementById('loading').classList.add('active');
     document.getElementById('error-box').innerHTML = '';
@@ -1299,11 +1262,15 @@
       }
     }
 
-    try {
-      if (recipes) {
-        const combined = (currentRecipes && currentRecipes.length > 0) ? currentRecipes.concat(recipes) : recipes;
-        displayRecipes(combined);
-      } else if (lastError) {
+    document.getElementById('loading').classList.remove('active');
+
+    if (recipes) {
+      displayRecipes(recipes);
+    } else {
+      // AI муваффақиятсиз — локал базага қайтиш (фойдаланувчи учун жимгина)
+      const shown = showLocalFallback();
+      if (!shown && lastError) {
+        // Локал ҳам бўш — фақат шунда хато кўрсатамиз
         const m = lastError.message || '';
         let friendly;
         if (/quota|limit:\s*0|429/i.test(m)) {
@@ -1315,8 +1282,6 @@
         }
         showError(friendly);
       }
-    } finally {
-      document.getElementById('loading').classList.remove('active');
     }
   }
 
@@ -1411,36 +1376,21 @@
   document.getElementById('btn-latin').addEventListener('click', () => switchScript('latin'));
   document.getElementById('btn-add-ingredient').addEventListener('click', addIngredient);
   document.getElementById('cook-btn').addEventListener('click', findRecipes);
-  document.getElementById('ai-btn').addEventListener('click', findWithAi);
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
   });
-
-  const aiBtn = document.getElementById('ai-btn');
-
-  function syncAiBtnState() {
-    aiBtn.disabled = selectedIngredients.length === 0;
-  }
 
   // Эски калитларни тозалаш (агар бўлса)
   if (localStorage.getItem('anthropic_api_key')) {
     localStorage.removeItem('anthropic_api_key');
   }
 
-  // updateButton'ни AI тугмаси билан синхронлаш
-  const originalUpdateButton = updateButton;
-  updateButton = function() {
-    originalUpdateButton();
-    syncAiBtnState();
-  };
-
   // Илк юкланиш
   document.getElementById('btn-cyrillic').classList.toggle('active', currentScript === 'cyrillic');
   document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
   applyScriptToPage();
   renderSuggestions();
-  syncAiBtnState();
   // Рецепт базасини фондан юклаб қўйиш
   loadLocalRecipes();
 </script>
