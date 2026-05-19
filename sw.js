@@ -7,9 +7,9 @@
 //  - Ҳар деплойда VERSION'ни бумп қилинг, эски кэш активацияда
 //    автоматик тозаланади.
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `ovqat-${VERSION}`;
-const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './og-image.png'];
 
 self.addEventListener('install', (event) => {
   // Янги SW дарҳол активацияга ўтсин
