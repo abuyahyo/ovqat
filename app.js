@@ -377,27 +377,27 @@
 Камида 5 та масаллиқ ва 5 та қадам бўлсин ҳар бир таом учун.
 Фақат JSON массивни қайтар, ҳеч қандай матн ёки markdown формати йўқ.`;
 
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json"
+      }
+    };
+
     let recipes = [];
     let renderedCount = 0;
-    let failed = false;
 
+    // 1) Биринчи — стрим режимини синаб кўриш (тезроқ ишлайди)
     try {
       const response = await fetch(PROXY_URL + '?stream=1', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 4096,
-            responseMimeType: "application/json"
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok || !response.body) {
-        failed = true;
-      } else {
+      if (response.ok && response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let sseBuffer = '';
@@ -427,7 +427,6 @@
 
           const parsed = parsePartialArray(textAccum);
           if (parsed.length > renderedCount) {
-            // Биринчи бўлакда — скелетоннни яшириб, контейнерни тайёрлаймиз
             if (renderedCount === 0) {
               loadingEl.classList.remove('active');
               prepareRecipesGrid();
@@ -440,7 +439,6 @@
           }
         }
 
-        // Якунда — тўлиқ матндан охирги обектлар
         const finalParsed = parsePartialArray(textAccum);
         if (finalParsed.length > renderedCount) {
           if (renderedCount === 0) {
@@ -453,10 +451,50 @@
           renderedCount = finalParsed.length;
           recipes = finalParsed;
         }
+      } else {
+        console.warn('Streaming response not OK:', response.status);
       }
     } catch (err) {
-      console.warn('AI request failed:', err);
-      failed = true;
+      console.warn('Streaming request failed:', err);
+    }
+
+    // 2) Стрим муваффақиятсиз — обычный (non-streaming) усулда уриниш
+    if (recipes.length === 0) {
+      try {
+        const response = await fetch(PROXY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+        if (response.ok && !data.error) {
+          const part = data && data.candidates && data.candidates[0]
+            && data.candidates[0].content && data.candidates[0].content.parts
+            && data.candidates[0].content.parts[0];
+          if (part && typeof part.text === 'string') {
+            let text = part.text.trim().replace(/```json|```/g, '').trim();
+            const start = text.indexOf('[');
+            const end = text.lastIndexOf(']');
+            if (start !== -1 && end !== -1) text = text.substring(start, end + 1);
+            try {
+              const parsed = JSON.parse(text);
+              if (Array.isArray(parsed) && parsed.length > 0) recipes = parsed;
+            } catch (e) {
+              console.warn('Non-stream parse error:', e);
+            }
+          }
+        } else {
+          console.warn('Non-stream HTTP not OK:', response.status, data);
+        }
+      } catch (err) {
+        console.warn('Non-stream request failed:', err);
+      }
+
+      // Агар nonstreaming натижа топилса — full displayRecipes (стрим ҳеч нима кўрсатмаган бўлса)
+      if (recipes.length > 0 && renderedCount === 0) {
+        loadingEl.classList.remove('active');
+        displayRecipes(recipes);
+      }
     }
 
     loadingEl.classList.remove('active');
@@ -465,7 +503,6 @@
       currentRecipes = recipes;
       writeCache(ckey, recipes);
     } else {
-      if (!failed) console.warn('No recipes parsed');
       showError(tr(texts['api-error-busy']));
     }
   }
