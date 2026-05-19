@@ -177,26 +177,6 @@
     pointer-events: none;
   }
 
-  .section-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--gold-deep);
-    margin-bottom: 12px;
-  }
-
-  .section-label::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: var(--gold);
-  }
-
   .section-title {
     font-family: 'Inter', sans-serif;
     font-size: 2rem;
@@ -871,7 +851,6 @@
 
   <main class="main-card">
     
-    <span class="section-label" data-tr="step-label"></span>
     <h2 class="section-title" data-tr="step-title"></h2>
 
     <div class="input-area">
@@ -1015,7 +994,6 @@
   const texts = {
     'title': 'Бугун нима тайёрлаймиз?',
     'subtitle': 'Уйингиздаги масаллиқларни айтинг — мен сизга мазали таомлар таклиф қилай',
-    'step-label': 'Бошланғич қадам',
     'step-title': 'Масаллиқларни киритинг',
     'btn-add': 'Қўшиш',
     'quick-select': 'Тез танлаш учун:',
