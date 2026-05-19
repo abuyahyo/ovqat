@@ -142,8 +142,7 @@
     'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.',
     'copied-to-clipboard': 'Рецепт нусхаланди ✓',
     'favorites-title': 'Севимли рецептлар',
-    'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.',
-    'voice-listening': 'Гапиринг...'
+    'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.'
   };
 
   function switchScript(script) {
@@ -736,60 +735,6 @@
   });
   updateFavoritesCount();
 
-  // Voice input via Web Speech API
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const micBtn = document.getElementById('btn-mic');
-  const ingredientInput = document.getElementById('ingredient-input');
-  if (SpeechRec) {
-    micBtn.hidden = false;
-    ingredientInput.classList.add('has-mic');
-    const rec = new SpeechRec();
-    rec.lang = 'uz-UZ';
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    let listening = false;
-    micBtn.addEventListener('click', () => {
-      try {
-        if (listening) { rec.stop(); return; }
-        rec.start();
-      } catch (e) { console.warn('SpeechRecognition start failed:', e); }
-    });
-    rec.addEventListener('start', () => {
-      listening = true;
-      micBtn.classList.add('listening');
-      ingredientInput.placeholder = tr(texts['voice-listening']);
-    });
-    rec.addEventListener('end', () => {
-      listening = false;
-      micBtn.classList.remove('listening');
-      ingredientInput.placeholder = tr(texts['input-placeholder']);
-    });
-    rec.addEventListener('error', (e) => {
-      listening = false;
-      micBtn.classList.remove('listening');
-      console.warn('Speech recognition error:', e.error);
-    });
-    rec.addEventListener('result', (e) => {
-      const t = e.results && e.results[0] && e.results[0][0] && e.results[0][0].transcript;
-      if (!t) return;
-      const parts = t.split(/[,;\.\s]+|\sва\s|\sи\s/i).map(p => p.trim()).filter(Boolean);
-      let added = 0;
-      parts.forEach(p => {
-        const cap = p.charAt(0).toUpperCase() + p.slice(1);
-        if (!selectedIngredients.includes(cap)) {
-          selectedIngredients.push(cap);
-          added++;
-        }
-      });
-      if (added > 0) {
-        renderIngredients();
-        renderSuggestions();
-        updateButton();
-      } else {
-        ingredientInput.value = t;
-      }
-    });
-  }
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-share-btn').addEventListener('click', shareCurrentRecipe);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
