@@ -819,6 +819,40 @@
   .api-key-row button:hover { background: var(--gold-deep); }
   .api-key-row button.saved { background: var(--sage); }
 
+  .api-key-hint {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    font-family: 'Manrope', sans-serif;
+    line-height: 1.5;
+  }
+
+  .btn-ai {
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--cream);
+    background: linear-gradient(135deg, var(--sage) 0%, var(--gold) 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-ai:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .btn-ai:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
   @media (max-width: 640px) {
     .container { padding: 20px 16px 60px; }
     .main-card { padding: 28px 20px; }
@@ -883,11 +917,15 @@
     </div>
 
     <details class="api-key-block" id="api-key-block">
-      <summary data-tr="api-key-label"></summary>
+      <summary data-tr="ai-toggle"></summary>
+      <p class="api-key-hint" data-tr="api-key-hint"></p>
       <div class="api-key-row">
         <input type="password" id="api-key-input" data-tr-placeholder="api-key-placeholder" autocomplete="off" spellcheck="false">
         <button id="api-key-save" data-tr="api-key-save"></button>
       </div>
+      <button class="btn-ai" id="ai-btn" disabled>
+        <span data-tr="ai-button"></span>
+      </button>
     </details>
 
     <div class="suggestions">
@@ -1018,13 +1056,18 @@
     'ingredients-label': 'Масаллиқлар',
     'steps-label': 'Тайёрлаш тартиби',
     'count-suffix': 'та',
+    'no-matches': 'Афсус, бу масаллиқлардан мос таом топилмади. Бошқа масаллиқлар қўшиб кўринг.',
+    'recipes-loading-error': 'Рецептлар базасини юклашда хатолик. Саҳифани қайта юкланг.',
+    'ai-toggle': 'AI билан кенгроқ таклиф (ихтиёрий)',
     'api-key-label': 'Anthropic API калити',
     'api-key-placeholder': 'sk-ant-...',
     'api-key-save': 'Сақлаш',
     'api-key-saved': 'Сақланди ✓',
-    'api-key-missing': 'Аввал API калитингизни киритинг',
-    'api-error-generic': 'Кечирасиз, таомларни топишда хатолик юз берди. Қайта уриниб кўринг.',
-    'api-error-prefix': 'API хатоси'
+    'api-key-hint': 'AI ишлаши учун ўз API калитингиз керак. console.anthropic.com сайтидан олинг.',
+    'ai-button': 'AI билан қўшимча таклиф',
+    'api-key-missing': 'AI учун API калитингизни киритинг',
+    'api-error-prefix': 'AI хатоси',
+    'api-error-generic': 'Кечирасиз, AI билан хатолик юз берди.'
   };
 
   function switchScript(script) {
@@ -1175,11 +1218,76 @@
     setTimeout(() => { errorBox.innerHTML = ''; }, 5000);
   }
 
+  // ============================================
+  //   ЛОКАЛ РЕЦЕПТ БАЗАСИ
+  // ============================================
+
+  let localRecipes = [];
+  let recipesLoaded = false;
+
+  async function loadLocalRecipes() {
+    try {
+      const res = await fetch('recipes.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      localRecipes = await res.json();
+      recipesLoaded = true;
+    } catch (err) {
+      console.error('Could not load recipes.json:', err);
+      showError(tr(texts['recipes-loading-error']));
+    }
+  }
+
+  // Кирилл матнни оддий шаклга келтириш (қидирув учун)
+  function normalize(s) {
+    return String(s || '').toLowerCase().replace(/[^\u0400-\u04FFa-z0-9\s]+/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function searchLocalRecipes(userIngredients) {
+    const needles = userIngredients.map(normalize).filter(Boolean);
+    if (needles.length === 0) return [];
+    const scored = localRecipes.map(r => {
+      const haystack = normalize((r.ingredients || []).join(' ') + ' ' + (r.name || ''));
+      let score = 0;
+      for (const n of needles) {
+        if (haystack.includes(n)) score++;
+      }
+      return { r, score };
+    }).filter(x => x.score > 0);
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 8).map(x => x.r);
+  }
+
+  async function findRecipes() {
+    if (selectedIngredients.length === 0) return;
+
+    if (!recipesLoaded) {
+      document.getElementById('loading').classList.add('active');
+      await loadLocalRecipes();
+      document.getElementById('loading').classList.remove('active');
+      if (!recipesLoaded) return;
+    }
+
+    document.getElementById('error-box').innerHTML = '';
+    const recipes = searchLocalRecipes(selectedIngredients);
+
+    if (recipes.length === 0) {
+      document.getElementById('results').classList.remove('active');
+      showError(tr(texts['no-matches']));
+      return;
+    }
+
+    displayRecipes(recipes);
+  }
+
+  // ============================================
+  //   AI ҚЎШИМЧА (ИХТИЁРИЙ)
+  // ============================================
+
   function getApiKey() {
     return localStorage.getItem('anthropic_api_key') || '';
   }
 
-  async function findRecipes() {
+  async function findWithAi() {
     if (selectedIngredients.length === 0) return;
 
     const apiKey = getApiKey();
@@ -1190,7 +1298,6 @@
     }
 
     document.getElementById('loading').classList.add('active');
-    document.getElementById('results').classList.remove('active');
     document.getElementById('error-box').innerHTML = '';
 
     const prompt = `Сен ўзбек ошпазсан. Қуйидаги масаллиқлар берилган: ${selectedIngredients.join(', ')}.
@@ -1253,7 +1360,9 @@
       if (!Array.isArray(recipes) || recipes.length === 0) {
         throw new Error('Empty recipes');
       }
-      displayRecipes(recipes);
+      // AI таклифларини локал натижалардан кейин қўшиб кўрсатиш
+      const combined = (currentRecipes && currentRecipes.length > 0) ? currentRecipes.concat(recipes) : recipes;
+      displayRecipes(combined);
 
     } catch (err) {
       console.error(err);
@@ -1354,6 +1463,7 @@
   document.getElementById('btn-latin').addEventListener('click', () => switchScript('latin'));
   document.getElementById('btn-add-ingredient').addEventListener('click', addIngredient);
   document.getElementById('cook-btn').addEventListener('click', findRecipes);
+  document.getElementById('ai-btn').addEventListener('click', findWithAi);
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
@@ -1362,6 +1472,12 @@
   // API калитини сақлаш
   const apiKeyInput = document.getElementById('api-key-input');
   const apiKeySaveBtn = document.getElementById('api-key-save');
+  const aiBtn = document.getElementById('ai-btn');
+
+  function syncAiBtnState() {
+    aiBtn.disabled = selectedIngredients.length === 0 || !getApiKey();
+  }
+
   apiKeyInput.value = localStorage.getItem('anthropic_api_key') || '';
   if (apiKeyInput.value) {
     apiKeySaveBtn.classList.add('saved');
@@ -1378,17 +1494,28 @@
       apiKeySaveBtn.classList.remove('saved');
       apiKeySaveBtn.textContent = tr(texts['api-key-save']);
     }
+    syncAiBtnState();
   });
   apiKeyInput.addEventListener('input', () => {
     apiKeySaveBtn.classList.remove('saved');
     apiKeySaveBtn.textContent = tr(texts['api-key-save']);
   });
 
+  // updateButton ни AI тугмаси билан синхронлаш учун кенгайтириш
+  const originalUpdateButton = updateButton;
+  updateButton = function() {
+    originalUpdateButton();
+    syncAiBtnState();
+  };
+
   // Илк юкланиш
   document.getElementById('btn-cyrillic').classList.toggle('active', currentScript === 'cyrillic');
   document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
   applyScriptToPage();
   renderSuggestions();
+  syncAiBtnState();
+  // Рецепт базасини фондан юклаб қўйиш
+  loadLocalRecipes();
 </script>
 
 </body>
