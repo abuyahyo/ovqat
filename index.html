@@ -6,6 +6,23 @@
 <title>Бугун нима тайёрлаймиз? · Ошхона ёрдамчиси</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8a6228">
+<meta name="description" content="Уйингиздаги масаллиқларни айтинг — мен сизга мазали ўзбек ва жаҳон таомларини таклиф қилай.">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ошхона ёрдамчиси">
+<meta property="og:title" content="Бугун нима тайёрлаймиз?">
+<meta property="og:description" content="Масаллиқларингизни киритинг — AI сизга мос ўзбек ва жаҳон таомларини таклиф қилади.">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://abuyahyo.github.io/ovqat/">
+<meta property="og:locale" content="uz_UZ">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Бугун нима тайёрлаймиз?">
+<meta name="twitter:description" content="Масаллиқларингизни киритинг — AI сизга мос ўзбек ва жаҳон таомларини таклиф қилади.">
+<meta name="twitter:image" content="og-image.png">
+
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -494,9 +511,17 @@
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(184, 137, 61, 0.15);
     cursor: pointer;
-    transition: all 0.4s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     position: relative;
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: cardAppear 0.5s ease forwards;
+    animation-delay: var(--stagger, 0ms);
+  }
+
+  @keyframes cardAppear {
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .recipe-card::before {
@@ -567,38 +592,28 @@
 
   .loading.active { display: block; }
 
-  .loading-spinner {
-    display: inline-block;
-    position: relative;
-    width: 60px;
-    height: 60px;
-    margin-bottom: 20px;
+  .skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto 24px;
+    text-align: left;
   }
 
-  .loading-spinner::before,
-  .loading-spinner::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px solid transparent;
+  .skeleton-card {
+    height: 220px;
+    border-radius: 16px;
+    background: linear-gradient(110deg, var(--paper) 8%, var(--cream-deep) 18%, var(--paper) 33%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(184, 137, 61, 0.1);
   }
 
-  .loading-spinner::before {
-    border-top-color: var(--gold);
-    border-right-color: var(--gold);
-    animation: spin 1.2s linear infinite;
-  }
-
-  .loading-spinner::after {
-    border-bottom-color: var(--terracotta);
-    border-left-color: var(--terracotta);
-    animation: spin 1.8s linear infinite reverse;
-    inset: 8px;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  @keyframes skeleton-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 
   .loading p {
@@ -649,10 +664,9 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  .modal-close {
+  .modal-action {
     position: absolute;
     top: 20px;
-    right: 20px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -664,12 +678,27 @@
     justify-content: center;
     color: var(--ink);
     transition: all 0.2s ease;
+    z-index: 2;
+  }
+
+  .modal-close {
+    right: 20px;
+  }
+
+  .modal-share {
+    right: 72px;
   }
 
   .modal-close:hover {
     background: var(--burgundy);
     color: var(--cream);
     transform: rotate(90deg);
+  }
+
+  .modal-share:hover {
+    background: var(--sage);
+    color: var(--cream);
+    transform: scale(1.08);
   }
 
   .modal-emoji {
@@ -899,7 +928,12 @@
     <div id="error-box"></div>
 
     <div class="loading" id="loading">
-      <div class="loading-spinner"></div>
+      <div class="skeleton-grid">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
       <p data-tr="loading"></p>
     </div>
 
@@ -925,7 +959,16 @@
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content">
-    <button class="modal-close" id="modal-close-btn">
+    <button class="modal-action modal-share" id="modal-share-btn" aria-label="Share" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </button>
+    <button class="modal-action modal-close" id="modal-close-btn" aria-label="Close">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -1011,7 +1054,8 @@
     'ingredients-label': 'Масаллиқлар',
     'steps-label': 'Тайёрлаш тартиби',
     'count-suffix': 'та',
-    'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.'
+    'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.',
+    'copied-to-clipboard': 'Рецепт нусхаланди ✓'
   };
 
   function switchScript(script) {
@@ -1260,7 +1304,7 @@
     currentRecipes = recipes;
     const grid = document.getElementById('recipes-grid');
     grid.innerHTML = recipes.map((r, i) => `
-      <article class="recipe-card" data-index="${i}">
+      <article class="recipe-card" data-index="${i}" style="--stagger: ${i * 70}ms">
         <span class="recipe-emoji">${esc(r.emoji || '🍽')}</span>
         <h3 class="recipe-name">${esc(tr(r.name))}</h3>
         <p class="recipe-desc">${esc(tr(r.description))}</p>
@@ -1293,6 +1337,11 @@
   function showRecipe(index) {
     currentRecipeIndex = index;
     const r = currentRecipes[index];
+    // Show share button only if Web Share API is available
+    const shareBtn = document.getElementById('modal-share-btn');
+    if (shareBtn) {
+      shareBtn.hidden = !(navigator.share || navigator.clipboard);
+    }
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
@@ -1338,6 +1387,31 @@
     currentRecipeIndex = -1;
   }
 
+  async function shareCurrentRecipe() {
+    if (currentRecipeIndex === -1) return;
+    const r = currentRecipes[currentRecipeIndex];
+    if (!r) return;
+    const name = tr(r.name || '');
+    const desc = tr(r.description || '');
+    const ingredients = (r.ingredients || []).map(i => '• ' + tr(i)).join('\n');
+    const steps = (r.steps || []).map((s, i) => (i + 1) + '. ' + tr(s)).join('\n');
+    const url = window.location.href;
+    const text = `${name}\n\n${desc}\n\n${tr(texts['ingredients-label'])}:\n${ingredients}\n\n${tr(texts['steps-label'])}:\n${steps}\n\n${url}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, text, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        showError(tr(texts['copied-to-clipboard']));
+      }
+    } catch (err) {
+      if (err && err.name !== 'AbortError') {
+        console.warn('Share failed:', err);
+      }
+    }
+  }
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
   });
@@ -1373,6 +1447,7 @@
 
   document.getElementById('cook-btn').addEventListener('click', findRecipes);
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-share-btn').addEventListener('click', shareCurrentRecipe);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
   });
