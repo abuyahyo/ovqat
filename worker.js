@@ -7,6 +7,10 @@
 //  - Google'нинг секрет сканнери калитни тополмайди;
 //  - CORS саҳифамиз учун аниқ очилади.
 //
+// Иккита режимли:
+//  - POST /         → ўзаро (non-streaming) — JSON жавоб
+//  - POST /?stream=1 → SSE стрим (streamGenerateContent)
+//
 // Тузатиш:
 //  1. Cloudflare Workers'да Secret яратиш: GEMINI_API_KEY = <Gemini key>
 //  2. Шу файлни Worker кодига ёпиштириш ва "Deploy"
@@ -34,6 +38,15 @@ function jsonResponse(payload, status = 200) {
   });
 }
 
+function shouldRetry(status, body) {
+  return (
+    status === 429 ||
+    status === 404 ||
+    status >= 500 ||
+    /quota|limit:\s*0|not\s*found|unavailable|overloaded|high\s*demand/i.test(body)
+  );
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
@@ -53,49 +66,75 @@ export default {
       return jsonResponse({ error: { message: 'Invalid JSON body' } }, 400);
     }
 
+    const url = new URL(request.url);
+    const stream = url.searchParams.get('stream') === '1';
+
     let lastError = null;
 
     for (const model of MODELS) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-        const upstream = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': env.GEMINI_API_KEY,
-          },
-          body: JSON.stringify(body),
-        });
+        if (stream) {
+          // Streaming — streamGenerateContent билан SSE форматида қайтариш
+          const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
+          const upstream = await fetch(upstreamUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': env.GEMINI_API_KEY,
+            },
+            body: JSON.stringify(body),
+          });
 
-        const text = await upstream.text();
+          if (upstream.ok) {
+            console.log(`[stream:${model}] status=${upstream.status} — forwarding stream`);
+            return new Response(upstream.body, {
+              status: 200,
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream; charset=utf-8',
+                'Cache-Control': 'no-cache, no-transform',
+                'X-Accel-Buffering': 'no',
+              },
+            });
+          }
 
-        // Debug log: which model, status, body length, first/last chars
-        console.log(`[${model}] status=${upstream.status} bytes=${text.length} head=${text.slice(0, 200)} tail=${text.slice(-200)}`);
+          const errText = await upstream.text();
+          console.log(`[stream:${model}] status=${upstream.status} head=${errText.slice(0, 200)}`);
+          lastError = { status: upstream.status, body: errText, model };
+          if (shouldRetry(upstream.status, errText)) continue;
+          return new Response(errText, {
+            status: upstream.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } else {
+          // Non-streaming
+          const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+          const upstream = await fetch(upstreamUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': env.GEMINI_API_KEY,
+            },
+            body: JSON.stringify(body),
+          });
 
-        if (upstream.ok) {
+          const text = await upstream.text();
+          console.log(`[${model}] status=${upstream.status} bytes=${text.length} head=${text.slice(0, 200)}`);
+
+          if (upstream.ok) {
+            return new Response(text, {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          lastError = { status: upstream.status, body: text, model };
+          if (shouldRetry(upstream.status, text)) continue;
           return new Response(text, {
-            status: 200,
+            status: upstream.status,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-
-        lastError = { status: upstream.status, body: text, model };
-
-        // Квота / мавжуд эмас / Gemini сервер юкламаси (5xx) → навбатдаги модель
-        if (
-          upstream.status === 429 ||
-          upstream.status === 404 ||
-          upstream.status >= 500 ||
-          /quota|limit:\s*0|not\s*found|unavailable|overloaded|high\s*demand/i.test(text)
-        ) {
-          continue;
-        }
-
-        // Бошқа хатолар — дарҳол қайтариш
-        return new Response(text, {
-          status: upstream.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
       } catch (err) {
         lastError = { status: 0, body: String((err && err.message) || err), model };
       }
