@@ -142,7 +142,8 @@
     'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.',
     'copied-to-clipboard': 'Рецепт нусхаланди ✓',
     'favorites-title': 'Севимли рецептлар',
-    'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.'
+    'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.',
+    'insufficient-default': 'Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?'
   };
 
   function switchScript(script) {
@@ -334,6 +335,34 @@
     return out;
   }
 
+  function isInsufficientResponse(arr) {
+    return Array.isArray(arr) && arr.length > 0 && arr[0] && arr[0].insufficient === true;
+  }
+
+  function renderInsufficient(info) {
+    const grid = document.getElementById('recipes-grid');
+    const msg = tr(info.message || texts['insufficient-default']);
+    const suggestions = Array.isArray(info.suggestions) ? info.suggestions : [];
+    const chips = suggestions
+      .filter(s => s && !selectedIngredients.includes(s))
+      .map(s => `<button class="chip-suggest" data-name="${esc(s)}">+ ${esc(tr(s))}</button>`)
+      .join('');
+    grid.innerHTML = `
+      <div class="insufficient-card">
+        <span class="insufficient-emoji">🥄</span>
+        <p class="insufficient-message">${esc(msg)}</p>
+        ${chips ? `<div class="insufficient-suggestions">${chips}</div>` : ''}
+      </div>
+    `;
+    grid.querySelectorAll('.chip-suggest').forEach(btn => {
+      btn.addEventListener('click', () => addIngredientFromChip(btn.dataset.name));
+    });
+    document.getElementById('results').classList.add('active');
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
   async function findRecipes() {
     if (selectedIngredients.length === 0) return;
 
@@ -403,6 +432,21 @@
 ТАВСИФ
 "description" — 15–20 сўз. Таомнинг таъми, текстураси ва қачон яхши ейилиши ҳақида қизиқарли ёзинг (фақат таркибни санаб ўтма).
 
+МАСАЛЛИҚЛАР ЕТАРЛИ ЭМАС ҲОЛАТИ
+Агар берилган масаллиқлардан чинакам мазали таом тайёрлашни ҲЕЧ ҚАНДАЙ ИЛОЖИ БЎЛМАСА (масалан: фақат битта таркибий қисм; фақат туз/сув/зиравор; бир-бирига мутлақо тўғри келмайдиган масаллиқлар; ва ҳ.к.) — ўйлаб топилган сохта таомлар ҚИЛМА. Бунинг ўрнига ФАҚАТ битта элементли JSON массивни қуйидаги форматда қайтар:
+
+[
+  {
+    "insufficient": true,
+    "message": "Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?",
+    "suggestions": ["Гўшт", "Пиёз", "Картошка", "Сабзи", "Гуруч"]
+  }
+]
+
+- "message" — ўзбекча, дўстона оҳангда (15–25 сўз). Қандай маҳсулот етишмаслигини юмшоқ айт.
+- "suggestions" — берилган масаллиқларга мос келадиган 4–6 та АСОСИЙ ўзбекча масаллиқ номи (бош ҳарф билан, фақат сўз — миқдорсиз).
+- ҚОИДА: агар камида 2 та ўзаро мос масаллиқ бўлса (мас. тухум+ун, картошка+пиёз, гўшт+пиёз) — оддий таомлар (омлет, қовурдоқ, шўрва, картошка қовурдоқ) таклиф қил, "insufficient" жавобини бермa. Бу жавобни фақат таом тайёрлаш мутлақо имконсиз бўлганда қайтар.
+
 ФОРМАТ
 Фақат JSON массивни қайтар, бошқа ҳеч нарса (markdown, изоҳ, тушунтириш) ёзма:
 
@@ -467,6 +511,15 @@
           }
 
           const parsed = parsePartialArray(textAccum);
+          if (isInsufficientResponse(parsed)) {
+            if (renderedCount === 0) {
+              loadingEl.classList.remove('active');
+              renderInsufficient(parsed[0]);
+            }
+            recipes = parsed;
+            renderedCount = parsed.length;
+            continue;
+          }
           if (parsed.length > renderedCount) {
             if (renderedCount === 0) {
               loadingEl.classList.remove('active');
@@ -481,7 +534,14 @@
         }
 
         const finalParsed = parsePartialArray(textAccum);
-        if (finalParsed.length > renderedCount) {
+        if (isInsufficientResponse(finalParsed)) {
+          if (renderedCount === 0) {
+            loadingEl.classList.remove('active');
+            renderInsufficient(finalParsed[0]);
+          }
+          recipes = finalParsed;
+          renderedCount = finalParsed.length;
+        } else if (finalParsed.length > renderedCount) {
           if (renderedCount === 0) {
             loadingEl.classList.remove('active');
             prepareRecipesGrid();
@@ -540,7 +600,9 @@
 
     loadingEl.classList.remove('active');
 
-    if (recipes.length > 0) {
+    if (isInsufficientResponse(recipes)) {
+      currentRecipes = [];
+    } else if (recipes.length > 0) {
       currentRecipes = recipes;
       writeCache(ckey, recipes);
     } else {
@@ -617,6 +679,13 @@
   }
 
   function displayRecipes(recipes) {
+    if (isInsufficientResponse(recipes)) {
+      currentRecipes = [];
+      const grid = document.getElementById('recipes-grid');
+      grid.innerHTML = '';
+      renderInsufficient(recipes[0]);
+      return;
+    }
     currentRecipes = recipes;
     const grid = document.getElementById('recipes-grid');
     grid.innerHTML = recipes.map((r, i) => recipeCardHtml(r, i)).join('');

@@ -472,6 +472,37 @@
     gap: 24px;
   }
 
+  .insufficient-card {
+    grid-column: 1 / -1;
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 40px 32px;
+    box-shadow: var(--shadow-soft);
+    border: 1px dashed rgba(184, 137, 61, 0.4);
+    text-align: center;
+  }
+
+  .insufficient-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .insufficient-message {
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.6;
+    margin: 0 auto 24px;
+    max-width: 540px;
+  }
+
+  .insufficient-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
   .recipe-card {
     background: var(--paper);
     border-radius: 16px;
