@@ -781,20 +781,19 @@
     if (currentRecipeIndex === -1) return;
     const r = currentRecipes[currentRecipeIndex];
     if (!r) return;
+    const emoji = r.emoji || '🍽';
     const name = tr(r.name || '');
     const cuisine = r.cuisine ? tr(r.cuisine) : '';
-    const desc = tr(r.description || '');
-    const ingredients = (r.ingredients || []).map(i => '• ' + tr(i)).join('\n');
-    const steps = (r.steps || []).map((s, i) => (i + 1) + '. ' + tr(s)).join('\n');
     const url = buildRecipeUrl(r);
-    const header = cuisine ? `${name}\n${tr(texts['cuisine-label'])}: ${cuisine}` : name;
-    const text = `${header}\n\n${desc}\n\n${tr(texts['ingredients-label'])}:\n${ingredients}\n\n${tr(texts['steps-label'])}:\n${steps}\n\n${url}`;
+    // Қисқа матн: эмоджи + ном + ошхона. Тўлиқ рецептни оладиган
+    // одам ҳаволани очиб кўради — Telegram'да узун матн чиқмайди.
+    const shortText = cuisine ? `${emoji} ${name} — ${cuisine}` : `${emoji} ${name}`;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: name, text, url });
+        await navigator.share({ title: name, text: shortText, url });
       } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(`${shortText}\n${url}`);
         showError(tr(texts['copied-to-clipboard']));
       }
     } catch (err) {
