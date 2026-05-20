@@ -965,9 +965,26 @@
   // (Network-first стратегияси: ҳар сафар янги версия олинади, кэш фонда)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((err) => {
-        console.warn('SW registration failed:', err);
-      });
+      // updateViaCache: 'none' — sw.js HTTP кэшни четлаб ўтиб ҳар сафар
+      // янгидан текширилади (GitHub Pages'нинг 10 дақиқалик кэши таъсир қилмасин).
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then((reg) => {
+          // Саҳифа кўринувчи бўлганда (фойдаланувчи табга қайтганда) —
+          // янги SW борлигини текшириш. Бу узоқ очиқ турган табларда
+          // ҳам янгилашни тезлаштиради.
+          const checkForUpdate = () => {
+            if (document.visibilityState === 'visible') {
+              reg.update().catch(() => {});
+            }
+          };
+          document.addEventListener('visibilitychange', checkForUpdate);
+          window.addEventListener('focus', checkForUpdate);
+          // Узоқ очиқ турган таб учун соатига бир марта текшириш
+          setInterval(checkForUpdate, 60 * 60 * 1000);
+        })
+        .catch((err) => {
+          console.warn('SW registration failed:', err);
+        });
     });
     // Янги SW активацияга ўтганда саҳифани автоматик янгилаш
     let reloaded = false;
