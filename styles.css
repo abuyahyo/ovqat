@@ -561,11 +561,41 @@
     line-height: 1.2;
   }
 
+  .recipe-cuisine {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+    background: rgba(184, 137, 61, 0.12);
+    border: 1px solid rgba(184, 137, 61, 0.25);
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 12px;
+  }
+
   .recipe-desc {
     font-size: 0.92rem;
     color: var(--ink-soft);
     margin-bottom: 18px;
     line-height: 1.55;
+  }
+
+  .modal-cuisine {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+    background: rgba(184, 137, 61, 0.12);
+    border: 1px solid rgba(184, 137, 61, 0.25);
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 14px;
   }
 
   .recipe-meta {
