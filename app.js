@@ -143,7 +143,9 @@
     'copied-to-clipboard': 'Рецепт нусхаланди ✓',
     'favorites-title': 'Севимли рецептлар',
     'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.',
-    'insufficient-default': 'Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?'
+    'insufficient-default': 'Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?',
+    'show-all': 'Барчасини кўрсатиш',
+    'show-less': 'Камроқ кўрсатиш'
   };
 
   function switchScript(script) {
@@ -227,19 +229,34 @@
   let currentRecipes = [];
   let currentRecipeIndex = -1;
   let servings = 4;
+  let showAllSuggestions = false;
+  const SUGGESTIONS_COLLAPSED = 18;
   const SERVINGS_MIN = 1;
   const SERVINGS_MAX = 12;
 
   function renderSuggestions() {
     const container = document.getElementById('suggestion-chips');
-    container.innerHTML = commonIngredients
-      .filter(item => !selectedIngredients.includes(item))
-      .slice(0, 18)
+    const available = commonIngredients.filter(item => !selectedIngredients.includes(item));
+    const visible = showAllSuggestions ? available : available.slice(0, SUGGESTIONS_COLLAPSED);
+    const chips = visible
       .map(item => `<button class="chip-suggest" data-name="${esc(item)}">+ ${esc(tr(item))}</button>`)
       .join('');
+    const hasMore = available.length > SUGGESTIONS_COLLAPSED;
+    const toggleLabel = showAllSuggestions ? texts['show-less'] : texts['show-all'];
+    const toggle = hasMore
+      ? `<button class="chip-toggle-all" type="button">${esc(tr(toggleLabel))}</button>`
+      : '';
+    container.innerHTML = chips + toggle;
     container.querySelectorAll('.chip-suggest').forEach(btn => {
       btn.addEventListener('click', () => addIngredientFromChip(btn.dataset.name));
     });
+    const toggleBtn = container.querySelector('.chip-toggle-all');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        showAllSuggestions = !showAllSuggestions;
+        renderSuggestions();
+      });
+    }
   }
 
   function addIngredient() {
