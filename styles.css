@@ -273,6 +273,24 @@
     border-style: solid;
   }
 
+  .chip-toggle-all {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    color: var(--gold-deep);
+    background: transparent;
+    border: 1px solid var(--gold);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+  }
+
+  .chip-toggle-all:hover {
+    background: var(--gold);
+    color: var(--paper);
+  }
+
   .ingredients-list {
     min-height: 80px;
     padding: 24px;
