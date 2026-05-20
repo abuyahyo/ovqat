@@ -949,6 +949,18 @@
   openSharedRecipeFromHash();
   window.addEventListener('hashchange', openSharedRecipeFromHash);
 
+  // iOS Safari'да viewport user-scalable=no эътиборга олинмайди —
+  // pinch ва double-tap zoom'ни JS орқали тўхтатамиз.
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('gesturechange', (e) => e.preventDefault());
+  document.addEventListener('gestureend', (e) => e.preventDefault());
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
+
   // Service Worker — оффлайн ишлаш ва тез юкланиш учун
   // (Network-first стратегияси: ҳар сафар янги версия олинади, кэш фонда)
   if ('serviceWorker' in navigator) {
