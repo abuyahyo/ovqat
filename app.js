@@ -688,7 +688,7 @@
     const desc = tr(r.description || '');
     const ingredients = (r.ingredients || []).map(i => '• ' + tr(i)).join('\n');
     const steps = (r.steps || []).map((s, i) => (i + 1) + '. ' + tr(s)).join('\n');
-    const url = window.location.href;
+    const url = buildRecipeUrl(r);
     const text = `${name}\n\n${desc}\n\n${tr(texts['ingredients-label'])}:\n${ingredients}\n\n${tr(texts['steps-label'])}:\n${steps}\n\n${url}`;
 
     try {
@@ -702,6 +702,53 @@
       if (err && err.name !== 'AbortError') {
         console.warn('Share failed:', err);
       }
+    }
+  }
+
+  // Рецептни URL hash'ига кодлаб солиш — фойдаланувчи ҳаволани улашганда,
+  // ҳаволани очган одам худди ўша рецептни кўради.
+  function encodeRecipe(recipe) {
+    const minimal = {
+      emoji: recipe.emoji,
+      name: recipe.name,
+      description: recipe.description,
+      time: recipe.time,
+      difficulty: recipe.difficulty,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps
+    };
+    const json = JSON.stringify(minimal);
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function decodeRecipe(encoded) {
+    let str = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    const binary = atob(str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const json = new TextDecoder().decode(bytes);
+    return JSON.parse(json);
+  }
+
+  function buildRecipeUrl(recipe) {
+    const base = window.location.origin + window.location.pathname + window.location.search;
+    return base + '#r=' + encodeRecipe(recipe);
+  }
+
+  function openSharedRecipeFromHash() {
+    const hash = window.location.hash || '';
+    if (!hash.startsWith('#r=')) return;
+    try {
+      const recipe = decodeRecipe(hash.substring(3));
+      if (!recipe || !recipe.name) return;
+      currentRecipes = [recipe];
+      showRecipe(0);
+    } catch (err) {
+      console.warn('Shared recipe decode failed:', err);
     }
   }
 
@@ -828,6 +875,10 @@
   document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
   applyScriptToPage();
   renderSuggestions();
+
+  // Улашилган рецепт ҳаволаси орқали очилган бўлса — дарҳол кўрсатиш
+  openSharedRecipeFromHash();
+  window.addEventListener('hashchange', openSharedRecipeFromHash);
 
   // Service Worker — оффлайн ишлаш ва тез юкланиш учун
   // (Network-first стратегияси: ҳар сафар янги версия олинади, кэш фонда)
