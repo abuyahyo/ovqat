@@ -510,7 +510,11 @@
       generationConfig: {
         temperature: 0.8,
         maxOutputTokens: 8192,
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        // Gemini 2.5 "thinking" режимини ўчириш — JSON генерацияси
+        // учун ўйлаш керак эмас, тезлик сезиларли ошади (2.0 моделлар
+        // бу майдонни инкор қилади, ҳеч муаммосиз).
+        thinkingConfig: { thinkingBudget: 0 }
       }
     };
 
