@@ -137,7 +137,6 @@
     'difficulty-label': 'Қийинлик',
     'ingredients-label': 'Масаллиқлар',
     'steps-label': 'Тайёрлаш тартиби',
-    'cuisine-label': 'Ошхона',
     'count-suffix': 'та',
     'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.',
     'copied-to-clipboard': 'Рецепт нусхаланди ✓',
@@ -468,12 +467,6 @@
 ТАВСИФ
 "description" — 15–20 сўз. Таомнинг таъми, текстураси ва қачон яхши ейилиши ҳақида қизиқарли ёзинг (фақат таркибни санаб ўтма).
 
-ОШХОНА МАНСУБЛИГИ
-- "cuisine" — таомнинг қайси миллий ошхонага мансублиги, ўзбек тилида, кирилл алифбосида ("Ўзбек", "Турк", "Италия", "Хитой", "Ҳинд", "Япон", "Корея", "Тайланд", "Россия", "Француз", "Мексика", "Грузин", "Тожик", "Қозоқ", "Араб", "Жаҳон" ва ҳ.к.).
-- Агар таом аниқ бир миллатга боғлиқ бўлмаса — "Жаҳон" деб ёз.
-- Ўзбек таомлари (ош, лағмон, манти, сомса ва ҳ.к.) учун — "Ўзбек".
-- Аниқлик муҳим: пицца — "Италия", суши — "Япон", борщ — "Россия/Украина", долма — "Турк" (ёки "Озарбайжон" — қайси таркибга кўра).
-
 МАСАЛЛИҚЛАР ЕТАРЛИ ЭМАС ҲОЛАТИ
 Агар берилган масаллиқлардан чинакам мазали таом тайёрлашни ҲЕЧ ҚАНДАЙ ИЛОЖИ БЎЛМАСА (масалан: фақат битта таркибий қисм; фақат туз/сув/зиравор; бир-бирига мутлақо тўғри келмайдиган масаллиқлар; ва ҳ.к.) — ўйлаб топилган сохта таомлар ҚИЛМА. Бунинг ўрнига ФАҚАТ битта элементли JSON массивни қуйидаги форматда қайтар:
 
@@ -496,7 +489,6 @@
   {
     "emoji": "🍲",
     "name": "Таом номи",
-    "cuisine": "Ўзбек",
     "description": "Таъм/текстура/нон-таклиф (15-20 сўз)",
     "time": "X дақиқа ёки X соат Y дақиқа",
     "difficulty": "Осон|Ўртача|Қийин",
@@ -668,7 +660,6 @@
         </button>
         <span class="recipe-emoji">${esc(r.emoji || '🍽')}</span>
         <h3 class="recipe-name">${esc(tr(r.name || ''))}</h3>
-        ${r.cuisine ? `<span class="recipe-cuisine">${esc(tr(r.cuisine))}</span>` : ''}
         <p class="recipe-desc">${esc(tr(r.description || ''))}</p>
         <div class="recipe-meta">
           <span>
@@ -756,7 +747,6 @@
     body.innerHTML = `
       <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
       <h2>${esc(tr(r.name))}</h2>
-      ${r.cuisine ? `<span class="modal-cuisine">${esc(tr(r.cuisine))}</span>` : ''}
       <p class="modal-desc">${esc(tr(r.description))}</p>
       
       <div class="modal-meta">
@@ -804,11 +794,10 @@
     if (!r) return;
     const emoji = r.emoji || '🍽';
     const name = tr(r.name || '');
-    const cuisine = r.cuisine ? tr(r.cuisine) : '';
     const url = buildRecipeUrl(r);
-    // Қисқа матн: эмоджи + ном + ошхона. Тўлиқ рецептни оладиган
-    // одам ҳаволани очиб кўради — Telegram'да узун матн чиқмайди.
-    const shortText = cuisine ? `${emoji} ${name} — ${cuisine}` : `${emoji} ${name}`;
+    // Қисқа матн: эмоджи + ном. Тўлиқ рецептни оладиган одам
+    // ҳаволани очиб кўради — Telegram'да узун матн чиқмайди.
+    const shortText = `${emoji} ${name}`;
 
     try {
       if (navigator.share) {
@@ -830,7 +819,6 @@
     const minimal = {
       emoji: recipe.emoji,
       name: recipe.name,
-      cuisine: recipe.cuisine,
       description: recipe.description,
       time: recipe.time,
       difficulty: recipe.difficulty,
