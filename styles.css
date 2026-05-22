@@ -639,28 +639,35 @@
 
   .loading.active { display: block; }
 
-  .skeleton-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    max-width: 900px;
-    margin: 0 auto 24px;
-    text-align: left;
+  .loading-progress {
+    width: 100%;
+    max-width: 360px;
+    height: 3px;
+    margin: 0 auto 28px;
+    background: rgba(184, 137, 61, 0.15);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
   }
 
-  .skeleton-card {
-    height: 220px;
-    border-radius: 16px;
-    background: linear-gradient(110deg, var(--paper) 8%, var(--cream-deep) 18%, var(--paper) 33%);
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.4s ease-in-out infinite;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(184, 137, 61, 0.1);
+  .loading-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg,
+      rgba(184, 137, 61, 0) 0%,
+      var(--gold) 50%,
+      rgba(184, 137, 61, 0) 100%);
+    border-radius: 100px;
+    animation: loading-slide 1.4s ease-in-out infinite;
   }
 
-  @keyframes skeleton-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  @keyframes loading-slide {
+    0%   { left: -40%; }
+    100% { left: 100%; }
   }
 
   .loading p {
