@@ -144,7 +144,10 @@
     'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.',
     'insufficient-default': 'Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?',
     'show-all': 'Барчасини кўрсатиш',
-    'show-less': 'Камроқ кўрсатиш'
+    'show-less': 'Камроқ кўрсатиш',
+    'regenerate': 'Бошқа таклифлар',
+    'install-app': 'Иловани ўрнатиш',
+    'install-prompt': 'Ушбу иловани телефонингизга ўрнатинг — оффлайн ҳам ишлайди.'
   };
 
   function switchScript(script) {
@@ -397,20 +400,25 @@
     }, 50);
   }
 
-  async function findRecipes() {
+  async function findRecipes(opts) {
     if (selectedIngredients.length === 0) return;
+    const bypassCache = !!(opts && opts.bypassCache);
+    const excludeNames = (opts && Array.isArray(opts.excludeNames)) ? opts.excludeNames : [];
 
     const ckey = cacheKey(selectedIngredients, servings);
-    const cached = readCache(ckey);
-    if (cached) {
-      displayRecipes(cached);
-      return;
+    if (!bypassCache) {
+      const cached = readCache(ckey);
+      if (cached) {
+        displayRecipes(cached);
+        return;
+      }
     }
 
     const loadingEl = document.getElementById('loading');
     const errorBox = document.getElementById('error-box');
     loadingEl.classList.add('active');
     errorBox.innerHTML = '';
+    hideRegenerateButton();
 
     const prompt = `Сен — тажрибали ўзбек ошпазсан. Адабий ўзбек тилида, имлоси аниқ, грамматикаси тўғри ёзасан.
 
@@ -495,7 +503,10 @@
     "ingredients": ["Гўшт — 400 г", "Пиёз — 2 та"],
     "steps": ["1-қадам аниқ ҳаракат + аломат", "2-қадам", "..."]
   }
-]`;
+]`
++ (excludeNames.length > 0
+    ? `\n\nОЛДИНГИ ТАКЛИФЛАР (бу таомларни ҚАЙТАРМА — янги, бошқача вариантлар бер):\n${excludeNames.map(n => `- ${n}`).join('\n')}`
+    : '');
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -641,9 +652,11 @@
 
     if (isInsufficientResponse(recipes)) {
       currentRecipes = [];
+      hideRegenerateButton();
     } else if (recipes.length > 0) {
       currentRecipes = recipes;
       writeCache(ckey, recipes);
+      showRegenerateButton();
     } else {
       showError(tr(texts['api-error-busy']));
     }
@@ -701,10 +714,21 @@
     const grid = document.getElementById('recipes-grid');
     grid.innerHTML = '';
     currentRecipes = [];
+    hideRegenerateButton();
     document.getElementById('results').classList.add('active');
     setTimeout(() => {
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
+  }
+
+  function showRegenerateButton() {
+    const row = document.getElementById('regenerate-row');
+    if (row) row.hidden = false;
+  }
+
+  function hideRegenerateButton() {
+    const row = document.getElementById('regenerate-row');
+    if (row) row.hidden = true;
   }
 
   function appendRecipeCard(r, i) {
@@ -722,6 +746,7 @@
       currentRecipes = [];
       const grid = document.getElementById('recipes-grid');
       grid.innerHTML = '';
+      hideRegenerateButton();
       renderInsufficient(recipes[0]);
       return;
     }
@@ -729,6 +754,7 @@
     const grid = document.getElementById('recipes-grid');
     grid.innerHTML = recipes.map((r, i) => recipeCardHtml(r, i)).join('');
     grid.querySelectorAll('.recipe-card').forEach(attachCardHandlers);
+    showRegenerateButton();
     document.getElementById('results').classList.add('active');
     setTimeout(() => {
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -893,7 +919,14 @@
   });
   syncServingsButtons();
 
-  document.getElementById('cook-btn').addEventListener('click', findRecipes);
+  document.getElementById('cook-btn').addEventListener('click', () => findRecipes());
+
+  // "Бошқа таклифлар" — бир хил масаллиқлардан янги вариантлар сўраш.
+  document.getElementById('regenerate-btn').addEventListener('click', () => {
+    const previous = (currentRecipes || []).map(r => r && r.name).filter(Boolean);
+    hideRegenerateButton();
+    findRecipes({ bypassCache: true, excludeNames: previous });
+  });
 
   // Favorites
   const favOverlay = document.getElementById('favorites-overlay');
@@ -987,6 +1020,71 @@
   // Улашилган рецепт ҳаволаси орқали очилган бўлса — дарҳол кўрсатиш
   openSharedRecipeFromHash();
   window.addEventListener('hashchange', openSharedRecipeFromHash);
+
+  // PWA install promp'и — Chrome/Edge'нинг beforeinstallprompt ивенти тутилади,
+  // фойдаланувчи "Кейинроқ"ни босса 14 кунгача яширилади.
+  const INSTALL_DISMISS_KEY = 'ovqat_install_dismissed_at';
+  const INSTALL_DISMISS_TTL = 14 * 24 * 60 * 60 * 1000;
+  let deferredInstallPrompt = null;
+  const installBanner = document.getElementById('install-banner');
+  const installAction = document.getElementById('install-banner-action');
+  const installClose = document.getElementById('install-banner-close');
+
+  function isInstallDismissed() {
+    const t = Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0);
+    return t && (Date.now() - t < INSTALL_DISMISS_TTL);
+  }
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+
+  function showInstallBanner() {
+    if (!installBanner) return;
+    if (isStandalone()) return;
+    if (isInstallDismissed()) return;
+    installBanner.hidden = false;
+  }
+
+  function hideInstallBanner() {
+    if (installBanner) installBanner.hidden = true;
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallBanner();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    hideInstallBanner();
+  });
+
+  if (installAction) {
+    installAction.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) {
+        hideInstallBanner();
+        return;
+      }
+      hideInstallBanner();
+      try {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+      } catch (err) {
+        console.warn('Install prompt failed:', err);
+      }
+      deferredInstallPrompt = null;
+    });
+  }
+
+  if (installClose) {
+    installClose.addEventListener('click', () => {
+      localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+      hideInstallBanner();
+    });
+  }
 
   // iOS Safari'да viewport user-scalable=no эътиборга олинмайди —
   // pinch ва double-tap zoom'ни JS орқали тўхтатамиз.

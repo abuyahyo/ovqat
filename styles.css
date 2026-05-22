@@ -464,6 +464,138 @@
     vertical-align: middle;
   }
 
+  .regenerate-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+  }
+
+  .regenerate-row[hidden] { display: none; }
+
+  .btn-regenerate {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--gold-deep);
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-regenerate:hover {
+    background: var(--gold);
+    color: var(--paper);
+    transform: translateY(-2px);
+  }
+
+  .btn-regenerate svg {
+    flex-shrink: 0;
+  }
+
+  .install-banner {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid rgba(184, 137, 61, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(42, 31, 23, 0.18);
+    padding: 14px 14px 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 1000;
+    animation: install-slide-up 0.4s ease;
+  }
+
+  .install-banner[hidden] { display: none; }
+
+  @keyframes install-slide-up {
+    from { transform: translateY(120%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .install-banner-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .install-banner-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .install-banner-text strong {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .install-banner-text p {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  .install-banner-action {
+    padding: 10px 18px;
+    background: var(--gold);
+    color: var(--paper);
+    border: none;
+    border-radius: 100px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+
+  .install-banner-action:hover { background: var(--gold-deep); }
+
+  .install-banner-close {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .install-banner-close:hover { background: var(--cream); }
+
+  @media (max-width: 480px) {
+    .install-banner {
+      padding: 12px;
+      gap: 10px;
+    }
+    .install-banner-icon { width: 36px; height: 36px; }
+    .install-banner-text strong { font-size: 0.88rem; }
+    .install-banner-text p { font-size: 0.72rem; }
+    .install-banner-action { padding: 8px 14px; font-size: 0.8rem; }
+  }
+
   .results {
     margin-top: 50px;
     display: none;
