@@ -419,6 +419,11 @@
     loadingEl.classList.add('active');
     errorBox.innerHTML = '';
     hideRegenerateButton();
+    // Эски карталарни тозалаб, loading индикаторини кўринадиган жойга
+    // суриб қўямиз — "Бошқа таклифлар"да юклаш аниқ билиниши учун.
+    document.getElementById('recipes-grid').innerHTML = '';
+    currentRecipes = [];
+    loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     const prompt = `Сен — тажрибали ўзбек ошпазсан. Адабий ўзбек тилида, имлоси аниқ, грамматикаси тўғри ёзасан.
 
