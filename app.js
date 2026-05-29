@@ -128,8 +128,10 @@
     'servings-label': 'Неча кишилик?',
     'btn-cook': 'Таомларни топиш',
     'loading': 'Энг мос таомларни танлаяпман...',
+    'generating': 'Рецепт тайёрланмоқда...',
+    'generate-recipe': 'Рецептни яратиш',
     'results-title': 'Сиз учун таклифлар',
-    'results-subtitle': 'Таомни тўлиқ рецепти учун босинг',
+    'results-subtitle': 'Таомни танланг — рецептини тайёрлаб бераман',
     'input-placeholder': 'Масалан: гўшт, картошка, пиёз...',
     'title-emphasis': 'тайёрлаймиз',
     'remove': 'Ўчириш',
@@ -400,12 +402,111 @@
     }, 50);
   }
 
+  // Ҳар икки промпт учун умумий тил/ном қоидалари.
+  const LANG_RULES = `ТИЛ ВА ИМЛО
+- Адабий ўзбек тили, КИРИЛЛ алифбоси.
+- Имлоси аниқ, тиниш белгилари жойида. Сўз ўртасида ёки охирида сабабсиз бўш жой йўқ.
+- Русча сўзларни сохта ўзбекчага транслитерация қилма ("лопшо", "блюдо", "вермишелька" — нотўғри). Тўғри атамалар: "лағмон", "таом", "макарон", "вермишел", "шўрва", "пишириш", "қовуриш", "димлаш".
+
+ТАОМ НОМЛАРИ — МАЖБУРИЙ ЎЗБЕКЧА
+- Таом номи ("name" майдони) ФАҚАТ ўзбек тилида, КИРИЛЛ алифбосида бўлсин. Русча, инглизча ёки бошқа тилдаги номларни ҲЕЧ ҚАЧОН ёзма.
+- Иложи борича миллий ўзбек/ўрта осиё таомларини таклиф қил: Ош, Лағмон, Манти, Сомса, Чучвара, Бешбармоқ, Шўрва, Мастава, Угра, Шавля, Димлама, Қовурдоқ, Норин, Хонум, Кабоб, Тухум барак, Қатлама, Патир, Куксумалак, Гўжа, Нарханги, Кўкатли чучвара, Жиз-биз, Тандир гўшт, Бўғирсоқ, Чалпак, Қуймоқ, Кулча, Оби-нон, Ширгуруч, Ҳалва, Сумалак, Холвайтар, Чакчак.
+- МУҲИМ: ўзбеклар "палов" эмас, "ОШ" дейди. Шунинг учун "Палов" сўзини ҲЕЧ ҚАЧОН ишлатма — ҳамиша "Ош" ёз ("Тошкент оши", "Қовурма ош", "Сабзавотли ош", "Девзира ош" каби).
+- Хорижий таом номларини ўзбекчалаштир: "пюре" → "эзма"; "суп" → "шўрва"; "блинчики" → "қуймоқ"/"чалпак"; "пельмени" → "чучвара"; "плов" → "Ош"; "лапша" → "угра"/"лағмон".
+- Умумий/мавҳум номлар ишлатма ("Гўштли таом" — нотўғри). Ҳар таомга АНИҚ ном бер: "Қозон кабоб", "Сабзавотли димлама", "Товуқли шавля".
+- Биринчи ҳарфи бош ҳарф билан ёзилсин.`;
+
+  // 1-БОСҚИЧ: фақат 10 та таом ғоясини таклиф қилиш (рецептсиз — тез ва енгил).
+  function buildSuggestionsPrompt(ingredients, excludeNames) {
+    return `Сен — тажрибали ўзбек ошпазсан. Адабий ўзбек тилида, имлоси аниқ ёзасан.
+
+КИРИТИЛГАН МАСАЛЛИҚЛАР: ${ingredients.join(', ')}
+
+ВАЗИФА
+Шу масаллиқлардан тайёрлаш мумкин бўлган АНИҚ 10 та хилма-хил таомни таклиф қил. Фақат таом ҒОЯСИНИ бер — батафсил рецепт, масаллиқ миқдори ёки тайёрлаш қадамлари ЁЗМА (улар кейинроқ алоҳида сўралади). Бир хил турни такрорлама. Турли йўналишларни қамраб ол: асосий таом, шўрва, салат, нонушта, ширинлик — масаллиқларга мос ҳолда.
+
+ИЖОЗАТ БЕРИЛГАН ҚЎШИМЧАЛАР
+Кириш масаллиқлардан ташқари оддий ошхона буюмлари ҳам ишлатилиши мумкин: туз, қалампир, шакар, ўсимлик ёғи, сариёғ, сув, сирка, лимон шарбати, асосий ўзбек зираворлари.
+
+${LANG_RULES}
+
+ВАҚТ ВА ҚИЙИНЛИК
+- "time" — тахминий бутун тайёрлаш вақти. Реалистик: тез нонушта 10–15 дақиқа, ош 60–90 дақиқа.
+- "difficulty": "Осон" (30 дақиқагача), "Ўртача" (30–90 дақиқа), "Қийин" (90+ дақиқа ёки махсус малака).
+
+ТАВСИФ
+"description" — 12–18 сўз. Таомнинг таъми, текстураси ва қачон яхши ейилиши ҳақида қизиқарли ёзинг.
+
+МАСАЛЛИҚЛАР ЕТАРЛИ ЭМАС ҲОЛАТИ
+Агар берилган масаллиқлардан чинакам мазали таом тайёрлашни ҲЕЧ ҚАНДАЙ ИЛОЖИ БЎЛМАСА (фақат битта таркиб; фақат туз/сув; мутлақо мос келмайдиганлар) — сохта таомлар ҚИЛМА. Бунинг ўрнига ФАҚАТ битта элементли массив қайтар:
+[{ "insufficient": true, "message": "Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?", "suggestions": ["Гўшт", "Пиёз", "Картошка", "Сабзи", "Гуруч"] }]
+Агар камида 2 та ўзаро мос масаллиқ бўлса — оддий таомлар таклиф қил, "insufficient" бермa.
+
+ФОРМАТ
+Фақат JSON массивни қайтар, бошқа ҳеч нарса ёзма:
+[
+  {
+    "emoji": "🍲",
+    "name": "Таом номи",
+    "description": "Таъм/текстура (12-18 сўз)",
+    "time": "X дақиқа",
+    "difficulty": "Осон|Ўртача|Қийин"
+  }
+]`
++ (excludeNames.length > 0
+    ? `\n\nОЛДИНГИ ТАКЛИФЛАР (бу таомларни ҚАЙТАРМА — янги, бошқача вариантлар бер):\n${excludeNames.map(n => `- ${n}`).join('\n')}`
+    : '');
+  }
+
+  // 2-БОСҚИЧ: танланган битта таомнинг тўлиқ рецептини N кишига генерация қилиш.
+  function buildRecipePrompt(dish, ingredients, servingsCount) {
+    return `Сен — тажрибали ўзбек ошпазсан. Адабий ўзбек тилида, имлоси аниқ ёзасан.
+
+КИРИТИЛГАН МАСАЛЛИҚЛАР: ${ingredients.join(', ')}
+ТАНЛАНГАН ТАОМ: ${dish.name}${dish.description ? ` (${dish.description})` : ''}
+ПОРЦИЯ: ${servingsCount} киши учун
+
+ВАЗИФА
+Айнан "${dish.name}" таоми учун ${servingsCount} кишилик тўлиқ, сифатли рецепт ёз — масъулият билан, реалистик, ҳақиқатан тайёрлаш мумкин бўлсин.
+
+ИЖОЗАТ БЕРИЛГАН ҚЎШИМЧАЛАР
+Кириш масаллиқлардан ташқари оддий ошхона буюмлари ишлатилиши мумкин: туз, қалампир, шакар, ўсимлик ёғи, сариёғ, сув, сирка, лимон шарбати, асосий ўзбек зираворлари.
+
+${LANG_RULES}
+
+МАСАЛЛИҚЛАР МИҚДОРИ
+- Ҳар бир масаллиқ учун АНИҚ миқдор: г, кг, мл, л, дона, ч.қ., о.қ., пиёла, чимдим.
+- Миқдорлар АЙНАН ${servingsCount} кишилик порция учун ҳисобланган бўлсин. Реалистик.
+- Формат: "Гўшт — 400 г", "Пиёз — 2 та (ўртача)", "Туз — 1 ч.қ.".
+- Камида 5 та масаллиқ.
+
+ТАЙЁРЛАШ ҚАДАМЛАРИ
+- Ҳар бир қадам — битта аниқ ҳаракат + натижани англатувчи аломат. Мисол: "Пиёзни ёғда сариққа айлангунча 5–7 дақиқа қовуринг".
+- Камида 5 та қадам, охиргиси — дастурхонга тортиш ёки безаш.
+- Содда, лекин керакли деталлар (вақт, олов даражаси, аломатлар) билан.
+
+ВАҚТ ВА ҚИЙИНЛИК
+- "time" — бутун тайёрлаш вақти. "difficulty": "Осон"|"Ўртача"|"Қийин".
+
+ФОРМАТ
+Фақат битта JSON ОБЪЕКТНИ қайтар (массив эмас), бошқа ҳеч нарса ёзма:
+{
+  "emoji": "${dish.emoji || '🍲'}",
+  "name": "${dish.name}",
+  "description": "Таъм/текстура (15-20 сўз)",
+  "time": "X дақиқа ёки X соат Y дақиқа",
+  "difficulty": "Осон|Ўртача|Қийин",
+  "ingredients": ["Гўшт — 400 г", "Пиёз — 2 та"],
+  "steps": ["1-қадам аниқ ҳаракат + аломат", "2-қадам", "..."]
+}`;
+  }
+
   async function findRecipes(opts) {
     if (selectedIngredients.length === 0) return;
     const bypassCache = !!(opts && opts.bypassCache);
     const excludeNames = (opts && Array.isArray(opts.excludeNames)) ? opts.excludeNames : [];
 
-    const ckey = cacheKey(selectedIngredients, servings);
+    const ckey = cacheKey(selectedIngredients, 'dishes');
     if (!bypassCache) {
       const cached = readCache(ckey);
       if (cached) {
@@ -425,99 +526,13 @@
     currentRecipes = [];
     loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    const prompt = `Сен — тажрибали ўзбек ошпазсан. Адабий ўзбек тилида, имлоси аниқ, грамматикаси тўғри ёзасан.
-
-КИРИТИЛГАН МАСАЛЛИҚЛАР: ${selectedIngredients.join(', ')}
-ПОРЦИЯ: ${servings} киши учун
-
-ВАЗИФА
-Шу масаллиқлардан ${servings} кишилик ${servings === 1 ? '1' : servings} порция учун АНИҚ 3 та таомни таклиф қил. Камроқ, лекин ҳар бири сифатли — масъулият билан, мукаммал ёзилган, ҳақиқатан тайёрлаш мумкин бўлсин. Бир хил турни такрорлама (2 та шўрва ёки 2 та ош бўлмасин). Учала таом турли йўналишда бўлсин (мас. асосий таом + шўрва + ширинлик; ёки нонушта + асосий таом + салат — масаллиқларга мос).
-
-ИЖОЗАТ БЕРИЛГАН ҚЎШИМЧАЛАР
-Кириш масаллиқлардан ташқари оддий ошхона буюмлари ҳам ишлатилиши мумкин: туз, қалампир (мурч), шакар, ўсимлик ёғи, сариёғ, сув, сирка, лимон шарбати, асосий ўзбек зираворлари (зира, лавр япроғи, кориандр, паприка).
-
-ТИЛ ВА ИМЛО
-- Адабий ўзбек тили, КИРИЛЛ алифбоси.
-- Имлоси аниқ, тиниш белгилари жойида. Сўз ўртасида ёки охирида сабабсиз бўш жой йўқ.
-- Русча сўзларни сохта ўзбекчага транслитерация қилма ("лопшо", "блюдо", "вермишелька" — нотўғри). Тўғри атамалар: "лағмон", "таом", "макарон", "вермишел", "шўрва", "пишириш", "қовуриш", "димлаш".
-
-ТАОМ НОМЛАРИ — МАЖБУРИЙ ЎЗБЕКЧА
-- Таом номи ("name" майдони) ФАҚАТ ўзбек тилида, КИРИЛЛ алифбосида бўлсин. Русча, инглизча ёки бошқа тилдаги номларни ҲЕЧ ҚАЧОН ёзма.
-- Иложи борича миллий ўзбек/ўрта осиё таомларини таклиф қил: Ош, Лағмон, Манти, Сомса, Чучвара, Бешбармоқ, Шўрва, Мастава, Угра, Шавля, Димлама, Қовурдоқ, Норин, Хонум, Кабоб, Тухум барак, Қатлама, Патир, Куксумалак, Гўжа, Нарханги, Кўкатли чучвара, Жиз-биз, Тандир гўшт, Бўғирсоқ, Чалпак, Қуймоқ, Кулча, Оби-нон, Ширгуруч, Ҳалва, Сумалак, Холвайтар, Чакчак.
-- МУҲИМ: ўзбеклар "палов" эмас, "ОШ" дейди. Шунинг учун "Палов" сўзини ҲЕЧ ҚАЧОН ишлатма — ҳамиша "Ош" ёз ("Тошкент оши", "Қовурма ош", "Сабзавотли ош", "Девзира ош" каби).
-- Хорижий таом номларини ўзбекчалаштир ёки ўзбекча муқобилини бер:
-  • "пюре" → "эзма" ёки "майдаланган картошка"
-  • "котлет" → "котлет" (қабул қилинган), лекин "куриный котлет" → "товуқли котлет"
-  • "суп" → "шўрва"
-  • "салат" → "салат" (қабул қилинган) ёки "хўрак"
-  • "омлет" → "омлет" (қабул қилинган) ёки "тухум қовурдоғи"
-  • "блинчики" → "қуймоқ" ёки "чалпак"
-  • "запеканка" → "тухумли пишириқ" ёки "пишириқ"
-  • "пельмени" → "чучвара"
-  • "плов" → "Ош" (ўзбеклар "палов" эмас, "ош" дейди — ҳамиша катта ҳарф билан)
-  • "лапша" → "угра" ёки "лағмон"
-- Умумий/мавҳум номлар ишлатма ("Гўштли таом", "Сабзавотли хўрак" — нотўғри). Ҳар таомга АНИҚ, ўзига хос ўзбекча ном бер: "Қозон кабоб", "Сабзавотли димлама", "Товуқли шавля", "Картошкали қовурдоқ".
-- Биринчи ҳарфи бош ҳарф билан ёзилсин: "Ош", "Лағмон", "Сабзавотли мастава".
-
-МАСАЛЛИҚЛАР МИҚДОРИ
-- Ҳар бир масаллиқ учун АНИҚ миқдор: г (грамм), кг, мл, л, дона, ч.қ. (чой қошиғи), о.қ. (ош қошиғи), пиёла, чимдим.
-- Миқдорлар ${servings} кишилик порция учун ҳисобланган бўлсин. Кам/ортиқ эмас, реалистик.
-- Формат: "Гўшт — 400 г", "Пиёз — 2 та (ўртача)", "Туз — 1 ч.қ.", "Сариёғ — 30 г".
-- Ҳар таомда камида 5 та масаллиқ.
-
-ТАЙЁРЛАШ ҚАДАМЛАРИ
-- Ҳар бир қадам — битта аниқ ҳаракат + натижани англатувчи аломат. Мисол: "Пиёзни ёғда сариққа айлангунча 5–7 дақиқа қовуринг", "Гўшт қизаргунча ҳар томонини 3–4 дақиқа аралаштириб ёғда тузга беринг".
-- Камида 5 та қадам, охирги қадам — дастурхонга тортиш ёки безаш.
-- Бошланғич ошпаз тушуниши учун содда ёзинг, лекин керакли деталларни (вақт, олов даражаси, аломатлар) ўтказиб юборманг.
-
-ВАҚТ ВА ҚИЙИНЛИК
-- "time" — БУТУН тайёрлаш вақти (тайёрлаш + пишириш). Реалистик: тез нонушта 10–15 дақиқа, ош 60–90 дақиқа, манти 60–80 дақиқа.
-- "difficulty":
-  - "Осон" — 30 дақиқагача, оддий техника.
-  - "Ўртача" — 30–90 дақиқа, бир неча босқич.
-  - "Қийин" — 90+ дақиқа ёки махсус малака талаб қилади (хамир, бўғда пишириш ва ҳ.к.).
-
-ТАВСИФ
-"description" — 15–20 сўз. Таомнинг таъми, текстураси ва қачон яхши ейилиши ҳақида қизиқарли ёзинг (фақат таркибни санаб ўтма).
-
-МАСАЛЛИҚЛАР ЕТАРЛИ ЭМАС ҲОЛАТИ
-Агар берилган масаллиқлардан чинакам мазали таом тайёрлашни ҲЕЧ ҚАНДАЙ ИЛОЖИ БЎЛМАСА (масалан: фақат битта таркибий қисм; фақат туз/сув/зиравор; бир-бирига мутлақо тўғри келмайдиган масаллиқлар; ва ҳ.к.) — ўйлаб топилган сохта таомлар ҚИЛМА. Бунинг ўрнига ФАҚАТ битта элементли JSON массивни қуйидаги форматда қайтар:
-
-[
-  {
-    "insufficient": true,
-    "message": "Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?",
-    "suggestions": ["Гўшт", "Пиёз", "Картошка", "Сабзи", "Гуруч"]
-  }
-]
-
-- "message" — ўзбекча, дўстона оҳангда (15–25 сўз). Қандай маҳсулот етишмаслигини юмшоқ айт.
-- "suggestions" — берилган масаллиқларга мос келадиган 4–6 та АСОСИЙ ўзбекча масаллиқ номи (бош ҳарф билан, фақат сўз — миқдорсиз).
-- ҚОИДА: агар камида 2 та ўзаро мос масаллиқ бўлса (мас. тухум+ун, картошка+пиёз, гўшт+пиёз) — оддий таомлар (омлет, қовурдоқ, шўрва, картошка қовурдоқ) таклиф қил, "insufficient" жавобини бермa. Бу жавобни фақат таом тайёрлаш мутлақо имконсиз бўлганда қайтар.
-
-ФОРМАТ
-Фақат JSON массивни қайтар, бошқа ҳеч нарса (markdown, изоҳ, тушунтириш) ёзма:
-
-[
-  {
-    "emoji": "🍲",
-    "name": "Таом номи",
-    "description": "Таъм/текстура/нон-таклиф (15-20 сўз)",
-    "time": "X дақиқа ёки X соат Y дақиқа",
-    "difficulty": "Осон|Ўртача|Қийин",
-    "ingredients": ["Гўшт — 400 г", "Пиёз — 2 та"],
-    "steps": ["1-қадам аниқ ҳаракат + аломат", "2-қадам", "..."]
-  }
-]`
-+ (excludeNames.length > 0
-    ? `\n\nОЛДИНГИ ТАКЛИФЛАР (бу таомларни ҚАЙТАРМА — янги, бошқача вариантлар бер):\n${excludeNames.map(n => `- ${n}`).join('\n')}`
-    : '');
+    const prompt = buildSuggestionsPrompt(selectedIngredients, excludeNames);
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 8192,
+        temperature: 0.9,
+        maxOutputTokens: 4096,
         responseMimeType: "application/json",
         // Gemini 2.5 "thinking" режимини ўчириш — JSON генерацияси
         // учун ўйлаш керак эмас, тезлик сезиларли ошади (2.0 моделлар
@@ -766,20 +781,33 @@
     }, 100);
   }
 
+  function hasFullRecipe(r) {
+    return r && Array.isArray(r.steps) && r.steps.length > 0;
+  }
+
   function showRecipe(index) {
     currentRecipeIndex = index;
     const r = currentRecipes[index];
-    // Show share button only if Web Share API is available
-    const shareBtn = document.getElementById('modal-share-btn');
-    if (shareBtn) {
-      shareBtn.hidden = !(navigator.share || navigator.clipboard);
+    if (!r) return;
+    if (hasFullRecipe(r)) {
+      renderFullRecipe(r);
+    } else {
+      renderDishIntro(r);
     }
+    document.getElementById('modal-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Тўлиқ рецепт кўриниши (масаллиқ миқдори + қадамлар)
+  function renderFullRecipe(r) {
+    const shareBtn = document.getElementById('modal-share-btn');
+    if (shareBtn) shareBtn.hidden = !(navigator.share || navigator.clipboard);
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
       <h2>${esc(tr(r.name))}</h2>
       <p class="modal-desc">${esc(tr(r.description))}</p>
-      
+
       <div class="modal-meta">
         <div class="modal-meta-item">
           <div class="label">${esc(tr(texts['time-label']))}</div>
@@ -809,8 +837,141 @@
         </ol>
       </div>
     `;
-    document.getElementById('modal-overlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
+  }
+
+  // Таом ғояси кўриниши — порция танлаш + "Рецептни яратиш" тугмаси
+  function renderDishIntro(r, errorMsg) {
+    const shareBtn = document.getElementById('modal-share-btn');
+    if (shareBtn) shareBtn.hidden = true; // рецепт ҳали йўқ — улашиш кераксиз
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
+      <h2>${esc(tr(r.name))}</h2>
+      <p class="modal-desc">${esc(tr(r.description))}</p>
+      ${errorMsg ? `<div class="modal-error">⚠ ${esc(errorMsg)}</div>` : ''}
+
+      <div class="modal-meta">
+        <div class="modal-meta-item">
+          <div class="label">${esc(tr(texts['time-label']))}</div>
+          <div class="value">${esc(tr(r.time || '—'))}</div>
+        </div>
+        <div class="modal-meta-item">
+          <div class="label">${esc(tr(texts['difficulty-label']))}</div>
+          <div class="value">${esc(tr(r.difficulty || '—'))}</div>
+        </div>
+      </div>
+
+      <div class="modal-servings">
+        <span class="modal-servings-label">${esc(tr(texts['servings-label']))}</span>
+        <div class="servings-control">
+          <button class="servings-btn" id="modal-servings-minus" aria-label="-">−</button>
+          <span class="servings-count" id="modal-servings-count">${servings}</span>
+          <button class="servings-btn" id="modal-servings-plus" aria-label="+">+</button>
+        </div>
+      </div>
+
+      <button class="btn-generate" id="modal-generate-btn" type="button">
+        <span>${esc(tr(texts['generate-recipe']))}</span>
+      </button>
+    `;
+
+    const minusBtn = document.getElementById('modal-servings-minus');
+    const plusBtn = document.getElementById('modal-servings-plus');
+    const countEl = document.getElementById('modal-servings-count');
+    function syncModalServings() {
+      minusBtn.disabled = servings <= SERVINGS_MIN;
+      plusBtn.disabled = servings >= SERVINGS_MAX;
+      countEl.textContent = servings;
+    }
+    minusBtn.addEventListener('click', () => {
+      if (servings > SERVINGS_MIN) { servings--; syncModalServings(); }
+    });
+    plusBtn.addEventListener('click', () => {
+      if (servings < SERVINGS_MAX) { servings++; syncModalServings(); }
+    });
+    syncModalServings();
+
+    document.getElementById('modal-generate-btn')
+      .addEventListener('click', () => generateRecipeForDish(currentRecipeIndex));
+  }
+
+  function renderModalLoading() {
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <div class="modal-generating">
+        <div class="loading-progress" aria-hidden="true"></div>
+        <p>${esc(tr(texts['generating']))}</p>
+      </div>
+    `;
+  }
+
+  // 2-БОСҚИЧ: танланган таомнинг тўлиқ рецептини сўраш ва кўрсатиш
+  async function generateRecipeForDish(index) {
+    const dish = currentRecipes[index];
+    if (!dish) return;
+
+    const rkey = cacheKey(selectedIngredients, 'recipe|' + recipeId(dish) + '|' + servings);
+    const cached = readCache(rkey);
+    if (cached) {
+      currentRecipes[index] = cached;
+      renderFullRecipe(cached);
+      return;
+    }
+
+    renderModalLoading();
+
+    const prompt = buildRecipePrompt(dish, selectedIngredients, servings);
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    };
+
+    let recipe = null;
+    try {
+      const response = await fetch(PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      });
+      const data = await response.json();
+      if (response.ok && !data.error) {
+        const part = data && data.candidates && data.candidates[0]
+          && data.candidates[0].content && data.candidates[0].content.parts
+          && data.candidates[0].content.parts[0];
+        if (part && typeof part.text === 'string') {
+          let text = part.text.trim().replace(/```json|```/g, '').trim();
+          const start = text.indexOf('{');
+          const end = text.lastIndexOf('}');
+          if (start !== -1 && end !== -1) text = text.substring(start, end + 1);
+          try {
+            const parsed = JSON.parse(text);
+            if (parsed && Array.isArray(parsed.steps) && parsed.steps.length > 0) {
+              recipe = { ...dish, ...parsed };
+            }
+          } catch (e) {
+            console.warn('Recipe parse error:', e);
+          }
+        }
+      } else {
+        console.warn('Recipe HTTP not OK:', response.status, data);
+      }
+    } catch (err) {
+      console.warn('Recipe request failed:', err);
+    }
+
+    if (recipe) {
+      currentRecipes[index] = recipe;
+      writeCache(rkey, recipe);
+      renderFullRecipe(recipe);
+    } else {
+      // Хато — таом ғояси кўринишига қайтариб, модал ичида хабар берамиз
+      renderDishIntro(dish, tr(texts['api-error-busy']));
+    }
   }
 
   function closeModal() {
@@ -822,7 +983,7 @@
   async function shareCurrentRecipe() {
     if (currentRecipeIndex === -1) return;
     const r = currentRecipes[currentRecipeIndex];
-    if (!r) return;
+    if (!r || !hasFullRecipe(r)) return;
     const emoji = r.emoji || '🍽';
     const name = tr(r.name || '');
     const url = buildRecipeUrl(r);
@@ -899,30 +1060,6 @@
   document.getElementById('btn-cyrillic').addEventListener('click', () => switchScript('cyrillic'));
   document.getElementById('btn-latin').addEventListener('click', () => switchScript('latin'));
   document.getElementById('btn-add-ingredient').addEventListener('click', addIngredient);
-  // Servings picker
-  const servingsCountEl = document.getElementById('servings-count');
-  const servingsMinusBtn = document.getElementById('servings-minus');
-  const servingsPlusBtn = document.getElementById('servings-plus');
-
-  function syncServingsButtons() {
-    servingsMinusBtn.disabled = servings <= SERVINGS_MIN;
-    servingsPlusBtn.disabled = servings >= SERVINGS_MAX;
-    servingsCountEl.textContent = servings;
-  }
-
-  servingsMinusBtn.addEventListener('click', () => {
-    if (servings > SERVINGS_MIN) {
-      servings--;
-      syncServingsButtons();
-    }
-  });
-  servingsPlusBtn.addEventListener('click', () => {
-    if (servings < SERVINGS_MAX) {
-      servings++;
-      syncServingsButtons();
-    }
-  });
-  syncServingsButtons();
 
   document.getElementById('cook-btn').addEventListener('click', () => findRecipes());
 

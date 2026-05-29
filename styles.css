@@ -305,24 +305,6 @@
     border: 1px solid rgba(184, 137, 61, 0.12);
   }
 
-  .servings-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 20px;
-    margin-bottom: 24px;
-    background: linear-gradient(135deg, var(--cream) 0%, var(--cream-deep) 100%);
-    border-radius: 14px;
-    border: 1px solid rgba(184, 137, 61, 0.12);
-  }
-
-  .servings-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 1.1rem;
-    color: var(--ink);
-    font-weight: 500;
-  }
-
   .servings-control {
     display: inline-flex;
     align-items: center;
@@ -368,6 +350,68 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--gold-deep);
+  }
+
+  .modal-servings {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    margin: 24px 0 18px;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--cream-deep) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(184, 137, 61, 0.12);
+  }
+
+  .modal-servings-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 24px rgba(184, 137, 61, 0.35);
+  }
+
+  .btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(184, 137, 61, 0.45);
+  }
+
+  .modal-error {
+    margin: 14px 0 0;
+    padding: 12px 16px;
+    background: rgba(192, 80, 60, 0.1);
+    border: 1px solid rgba(192, 80, 60, 0.3);
+    border-radius: 12px;
+    color: #b04a3a;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+
+  .modal-generating {
+    text-align: center;
+    padding: 48px 20px;
+  }
+
+  .modal-generating p {
+    margin-top: 24px;
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
   }
 
   .ingredient-tag {
