@@ -16,44 +16,15 @@
   }
 
   // ============================================
-  //   СЕВИМЛИ + КЭШ (localStorage)
+  //   КЭШ (localStorage)
   // ============================================
 
-  const FAVORITES_KEY = 'ovqat_favorites';
   const CACHE_KEY = 'ovqat_search_cache';
   const CACHE_MAX = 20;
   const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
   function recipeId(r) {
     return (r && r.name ? String(r.name) : '').toLowerCase().replace(/\s+/g, '-');
-  }
-
-  function getFavorites() {
-    try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; }
-    catch { return []; }
-  }
-  function setFavorites(list) {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
-  }
-  function isFavorite(r) {
-    const id = recipeId(r);
-    return getFavorites().some(f => recipeId(f) === id);
-  }
-  function toggleFavorite(r) {
-    const id = recipeId(r);
-    const list = getFavorites();
-    const idx = list.findIndex(f => recipeId(f) === id);
-    if (idx >= 0) list.splice(idx, 1);
-    else list.push(r);
-    setFavorites(list);
-    updateFavoritesCount();
-    return idx < 0;
-  }
-  function updateFavoritesCount() {
-    const el = document.getElementById('favorites-count');
-    const n = getFavorites().length;
-    el.textContent = n;
-    el.setAttribute('data-count', String(n));
   }
 
   function cacheKey(ingredients, servingsCount) {
@@ -141,9 +112,6 @@
     'steps-label': 'Тайёрлаш тартиби',
     'count-suffix': 'та',
     'api-error-busy': 'Иловa ҳозир банд. Илтимос, бир оздан кейин қайта уриниб кўринг.',
-    'copied-to-clipboard': 'Рецепт нусхаланди ✓',
-    'favorites-title': 'Севимли рецептлар',
-    'favorites-empty': 'Ҳозирча севимли рецепт йўқ. Рецепт устидаги ❤ тугмасини босиб қўшинг.',
     'insufficient-default': 'Сиз белгилаган маҳсулотлар мазали таом тайёрлашга етарли эмас. Қуйидагилардан ҳам борми?',
     'show-all': 'Барчасини кўрсатиш',
     'show-less': 'Камроқ кўрсатиш',
@@ -686,11 +654,6 @@ ${LANG_RULES}
   function recipeCardHtml(r, i) {
     return `
       <article class="recipe-card" data-index="${i}" style="--stagger: ${i * 70}ms">
-        <button class="recipe-fav ${isFavorite(r) ? 'active' : ''}" data-fav-index="${i}" aria-label="Sevimli">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        </button>
         <span class="recipe-emoji">${esc(r.emoji || '🍽')}</span>
         <h3 class="recipe-name">${esc(tr(r.name || ''))}</h3>
         <p class="recipe-desc">${esc(tr(r.description || ''))}</p>
@@ -714,20 +677,9 @@ ${LANG_RULES}
   }
 
   function attachCardHandlers(card) {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.recipe-fav')) return;
+    card.addEventListener('click', () => {
       showRecipe(Number(card.dataset.index));
     });
-    const favBtn = card.querySelector('.recipe-fav');
-    if (favBtn) {
-      favBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = Number(favBtn.dataset.favIndex);
-        const r = currentRecipes[idx];
-        const added = toggleFavorite(r);
-        favBtn.classList.toggle('active', added);
-      });
-    }
   }
 
   function prepareRecipesGrid() {
@@ -800,8 +752,6 @@ ${LANG_RULES}
 
   // Тўлиқ рецепт кўриниши (масаллиқ миқдори + қадамлар)
   function renderFullRecipe(r) {
-    const shareBtn = document.getElementById('modal-share-btn');
-    if (shareBtn) shareBtn.hidden = !(navigator.share || navigator.clipboard);
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
@@ -841,8 +791,6 @@ ${LANG_RULES}
 
   // Таом ғояси кўриниши — порция танлаш + "Рецептни яратиш" тугмаси
   function renderDishIntro(r, errorMsg) {
-    const shareBtn = document.getElementById('modal-share-btn');
-    if (shareBtn) shareBtn.hidden = true; // рецепт ҳали йўқ — улашиш кераксиз
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="modal-emoji">${esc(r.emoji || '🍽')}</div>
@@ -980,78 +928,6 @@ ${LANG_RULES}
     currentRecipeIndex = -1;
   }
 
-  async function shareCurrentRecipe() {
-    if (currentRecipeIndex === -1) return;
-    const r = currentRecipes[currentRecipeIndex];
-    if (!r || !hasFullRecipe(r)) return;
-    const emoji = r.emoji || '🍽';
-    const name = tr(r.name || '');
-    const url = buildRecipeUrl(r);
-    // Қисқа матн: эмоджи + ном. Тўлиқ рецептни оладиган одам
-    // ҳаволани очиб кўради — Telegram'да узун матн чиқмайди.
-    const shortText = `${emoji} ${name}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: name, text: shortText, url });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${shortText}\n${url}`);
-        showError(tr(texts['copied-to-clipboard']));
-      }
-    } catch (err) {
-      if (err && err.name !== 'AbortError') {
-        console.warn('Share failed:', err);
-      }
-    }
-  }
-
-  // Рецептни URL hash'ига кодлаб солиш — фойдаланувчи ҳаволани улашганда,
-  // ҳаволани очган одам худди ўша рецептни кўради.
-  function encodeRecipe(recipe) {
-    const minimal = {
-      emoji: recipe.emoji,
-      name: recipe.name,
-      description: recipe.description,
-      time: recipe.time,
-      difficulty: recipe.difficulty,
-      ingredients: recipe.ingredients,
-      steps: recipe.steps
-    };
-    const json = JSON.stringify(minimal);
-    const bytes = new TextEncoder().encode(json);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  function decodeRecipe(encoded) {
-    let str = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    while (str.length % 4) str += '=';
-    const binary = atob(str);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const json = new TextDecoder().decode(bytes);
-    return JSON.parse(json);
-  }
-
-  function buildRecipeUrl(recipe) {
-    const base = window.location.origin + window.location.pathname + window.location.search;
-    return base + '#r=' + encodeRecipe(recipe);
-  }
-
-  function openSharedRecipeFromHash() {
-    const hash = window.location.hash || '';
-    if (!hash.startsWith('#r=')) return;
-    try {
-      const recipe = decodeRecipe(hash.substring(3));
-      if (!recipe || !recipe.name) return;
-      currentRecipes = [recipe];
-      showRecipe(0);
-    } catch (err) {
-      console.warn('Shared recipe decode failed:', err);
-    }
-  }
-
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
   });
@@ -1070,81 +946,7 @@ ${LANG_RULES}
     findRecipes({ bypassCache: true, excludeNames: previous });
   });
 
-  // Favorites
-  const favOverlay = document.getElementById('favorites-overlay');
-  const favOpenBtn = document.getElementById('favorites-open');
-  const favCloseBtn = document.getElementById('favorites-close-btn');
-  const favList = document.getElementById('favorites-list');
-  const favEmptyMsg = document.getElementById('favorites-empty-msg');
-
-  function renderFavoritesModal() {
-    const favs = getFavorites();
-    favEmptyMsg.style.display = favs.length === 0 ? 'block' : 'none';
-    favList.innerHTML = favs.map((r, i) => `
-      <div class="favorite-row" data-fav-modal-index="${i}">
-        <span class="emoji">${esc(r.emoji || '🍽')}</span>
-        <div class="meta">
-          <div class="name">${esc(tr(r.name || ''))}</div>
-          <div class="desc">${esc(tr(r.description || ''))}</div>
-        </div>
-        <button class="remove" data-fav-remove-index="${i}" aria-label="O'chirish">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-    `).join('');
-    favList.querySelectorAll('.favorite-row').forEach(row => {
-      row.addEventListener('click', (e) => {
-        if (e.target.closest('.remove')) return;
-        const idx = Number(row.dataset.favModalIndex);
-        const r = getFavorites()[idx];
-        if (!r) return;
-        closeFavorites();
-        currentRecipes = getFavorites();
-        showRecipe(idx);
-      });
-    });
-    favList.querySelectorAll('.remove').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = Number(btn.dataset.favRemoveIndex);
-        const list = getFavorites();
-        list.splice(idx, 1);
-        setFavorites(list);
-        updateFavoritesCount();
-        renderFavoritesModal();
-        document.querySelectorAll('.recipe-fav').forEach(b => {
-          const card = b.closest('.recipe-card');
-          const cidx = Number(card && card.dataset.index);
-          const r = currentRecipes[cidx];
-          if (r) b.classList.toggle('active', isFavorite(r));
-        });
-      });
-    });
-  }
-
-  function openFavorites() {
-    renderFavoritesModal();
-    favOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeFavorites() {
-    favOverlay.classList.remove('active');
-    if (!document.getElementById('modal-overlay').classList.contains('active')) {
-      document.body.style.overflow = '';
-    }
-  }
-
-  favOpenBtn.addEventListener('click', openFavorites);
-  favCloseBtn.addEventListener('click', closeFavorites);
-  favOverlay.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeFavorites();
-  });
-  updateFavoritesCount();
-
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-  document.getElementById('modal-share-btn').addEventListener('click', shareCurrentRecipe);
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
   });
@@ -1158,10 +960,6 @@ ${LANG_RULES}
   document.getElementById('btn-latin').classList.toggle('active', currentScript === 'latin');
   applyScriptToPage();
   renderSuggestions();
-
-  // Улашилган рецепт ҳаволаси орқали очилган бўлса — дарҳол кўрсатиш
-  openSharedRecipeFromHash();
-  window.addEventListener('hashchange', openSharedRecipeFromHash);
 
   // PWA install promp'и — Chrome/Edge'нинг beforeinstallprompt ивенти тутилади,
   // фойдаланувчи "Кейинроқ"ни босса 14 кунгача яширилади.
