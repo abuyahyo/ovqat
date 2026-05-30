@@ -887,20 +887,10 @@
     right: 20px;
   }
 
-  .modal-share {
-    right: 72px;
-  }
-
   .modal-close:hover {
     background: var(--burgundy);
     color: var(--cream);
     transform: rotate(90deg);
-  }
-
-  .modal-share:hover {
-    background: var(--sage);
-    color: var(--cream);
-    transform: scale(1.08);
   }
 
   .modal-emoji {
@@ -1043,190 +1033,15 @@
     font-size: 0.95rem;
   }
 
-  /* --- Sevimlilar (Favorites) --- */
-  .favorites-toggle {
-    position: fixed;
-    top: 24px;
-    left: 24px;
-    z-index: 50;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--paper);
-    border: 1px solid rgba(184, 137, 61, 0.2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--burgundy);
-    box-shadow: var(--shadow-soft);
-    transition: all 0.2s ease;
-    padding: 0;
-  }
-
-  .favorites-toggle:hover {
-    transform: scale(1.06);
-    box-shadow: var(--shadow-med);
-  }
-
-  .favorites-count {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--burgundy);
-    color: var(--cream);
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--paper);
-  }
-
-  .favorites-count[data-count="0"] {
-    display: none;
-  }
-
-  .recipe-fav {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(254, 252, 247, 0.9);
-    border: 1px solid rgba(184, 137, 61, 0.2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-soft);
-    transition: all 0.2s ease;
-    z-index: 2;
-    padding: 0;
-  }
-
-  .recipe-fav:hover {
-    background: var(--paper);
-    color: var(--burgundy);
-    transform: scale(1.1);
-  }
-
-  .recipe-fav.active {
-    color: var(--burgundy);
-  }
-
-  .recipe-fav.active svg {
-    fill: var(--burgundy);
-  }
-
-  .favorites-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 600;
-    text-align: center;
-    color: var(--ink);
-    margin-bottom: 8px;
-    word-break: break-word;
-    padding: 0 36px;
-    line-height: 1.25;
-  }
-
-  .favorites-subtitle {
-    text-align: center;
-    color: var(--ink-soft);
-    font-style: italic;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    margin-bottom: 24px;
-    padding: 0 8px;
-  }
-
-  .favorites-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .favorite-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px;
-    background: var(--cream);
-    border-radius: 14px;
-    border: 1px solid rgba(184, 137, 61, 0.15);
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .favorite-row:hover {
-    background: var(--paper);
-    transform: translateY(-1px);
-  }
-
-  .favorite-row .emoji {
-    font-size: 2rem;
-    flex-shrink: 0;
-  }
-
-  .favorite-row .meta {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .favorite-row .name {
-    font-weight: 600;
-    color: var(--ink);
-    font-size: 1.05rem;
-    margin-bottom: 2px;
-  }
-
-  .favorite-row .desc {
-    color: var(--ink-soft);
-    font-size: 0.85rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .favorite-row .remove {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: transparent;
-    border: none;
-    color: var(--ink-soft);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-    padding: 0;
-  }
-
-  .favorite-row .remove:hover {
-    background: var(--burgundy);
-    color: var(--cream);
-  }
-
   @media (max-width: 640px) {
     .container { padding: 20px 16px 60px; }
     .main-card { padding: 28px 20px; }
     .main-card::before { inset: 6px; }
     .modal { padding: 32px 18px; }
-    .favorites-title { font-size: 1.35rem; padding: 0 44px; }
-    .favorites-subtitle { font-size: 0.88rem; }
     .input-area { flex-direction: column; }
     .btn-add { width: 100%; justify-content: center; }
     .header h1 { font-size: 2.2rem; }
     .header { padding-top: 70px; }
     .script-toggle { top: 16px; right: 16px; }
     .script-toggle button { padding: 7px 14px; font-size: 0.78rem; }
-    .favorites-toggle { top: 16px; left: 16px; width: 40px; height: 40px; }
   }
