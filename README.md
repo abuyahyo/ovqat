@@ -47,7 +47,7 @@ cd ovqat
 
 ## 🤝 Ҳисса қўшиш
 
-Хатолик топсангиз — [Issue](https://github.com/abuyahyo/ovqat/issues) очанг.
+Хатолик топсангиз — [Issue](https://github.com/abuyahyo/ovqat/issues) очинг.
 
 ---
 
